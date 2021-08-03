@@ -11,6 +11,7 @@ A [BlurHash](https://blurha.sh/) is a compact representation of a placeholder fo
 ## Requirements
 
 * Craft CMD 3.x
+* PHP 7.3 or higher
 * GD / ImageMagick (*as required by Craft CMS*)
 
 ## Installation
