@@ -130,40 +130,60 @@ class BlurHashTwigExtension extends AbstractExtension
             return false;
         }
 
-        // Create a small transform in order to work with the file quickly.
-        $assetTransform = new AssetTransform([
-            'mode' => 'stretch',
-            'width' =>  64, 
-            'height' => 64,
-            'quality' => 1,
-        ]);
+        // Set unique cacheKey
+        $cacheKey = 'blurhashstring-' . $asset->id . $asset->dateModified->format('YmdHis');
+        $cachedValue = \Craft::$app->cache->get($cacheKey);
 
-        // Copy asset with the transform.
-        $transformedAsset = $asset->copyWithTransform($assetTransform);
-        $transformedAssetContents = file_get_contents($transformedAsset);
-        $image = imagecreatefromstring($transformedAssetContents);
-        $width = imagesx($image);
-        $height = imagesy($image);
+        // Check for cached value
+        if ($cachedValue) {
+            return $cachedValue;
+            
+        } else {
+            // // Get the cached value
+            // $cachedValue = \Craft::$app->cache->get($cacheKey);
 
-        // Get colours for image
-        $pixels = [];
-        for ($y = 0; $y < $height; ++$y) {
-            $row = [];
-            for ($x = 0; $x < $width; ++$x) {
-                $index = imagecolorat($image, $x, $y);
-                $colors = imagecolorsforindex($image, $index);
+            // // Create a small transform in order to work with the file quickly.
+            // $assetTransform = new AssetTransform([
+            //     'mode' => 'stretch',
+            //     'width' =>  64, 
+            //     'height' => 64,
+            //     'quality' => 1,
+            // ]);
 
-                $row[] = [$colors['red'], $colors['green'], $colors['blue']];
+            // // Copy asset with the transform.
+            // $transformedAsset = $asset->copyWithTransform($assetTransform);
+            // $image = imagecreatefromstring($transformedAsset->getContents());
+            // $width = imagesx($image);
+            // $height = imagesy($image);
+
+            $thumbnailImage = imagecreatetruecolor(64, 64);
+            imagecopyresampled($thumbnailImage, imagecreatefromstring($asset->getContents()), 0, 0, 0, 0, 64, 64, $asset->width, $asset->height);
+            $width = imagesx($thumbnailImage);
+            $height = imagesy($thumbnailImage);
+            
+            // Get colours for image
+            $pixels = [];
+            for ($y = 0; $y < $height; ++$y) {
+                $row = [];
+                for ($x = 0; $x < $width; ++$x) {
+                    $index = imagecolorat($thumbnailImage, $x, $y);
+                    $colors = imagecolorsforindex($thumbnailImage, $index);
+
+                    $row[] = [$colors['red'], $colors['green'], $colors['blue']];
+                }
+                $pixels[] = $row;
             }
-            $pixels[] = $row;
+            
+            imagedestroy($thumbnailImage);
+
+            // Generate a blurhash from the image data.
+            $components_x = 3;
+            $components_y = 3;
+            $blurhash = KornRunnerBlurhash::encode($pixels, $components_x, $components_y);
+            \Craft::$app->cache->set($cacheKey, $blurhash, 60 * 60 * 24 * 7 * 4); // Cache for approx 1 month
+            return $blurhash;
         }
 
-        // Generate a blurhash from the image data.
-        $components_x = 3;
-        $components_y = 3;
-        $blurhash = KornRunnerBlurhash::encode($pixels, $components_x, $components_y);
-
-        return $blurhash;
     }
 
 
@@ -181,24 +201,38 @@ class BlurHashTwigExtension extends AbstractExtension
             return false;
         }
 
-        // Set size of returned image. Keep it small!
-        $width = 64;
-        $height = 64;
+        // Set unique cacheKey
+        $cacheKey = 'blurhashimagedata-' . $blurhash;
+        $cachedValue = \Craft::$app->cache->get($cacheKey);
 
-        // Decode the blurhash to an image file.
-        $pixels = KornRunnerBlurhash::decode($blurhash, $width, $height);
-        $decodedImage  = imagecreatetruecolor($width, $height);
-        for ($y = 0; $y < $height; ++$y) {
-            for ($x = 0; $x < $width; ++$x) {
-                [$r, $g, $b] = $pixels[$y][$x];
-                imagesetpixel($decodedImage, $x, $y, imagecolorallocate($decodedImage, $r, $g, $b));
+        // Check for cached value
+        if ($cachedValue) {
+            return $cachedValue;
+            
+        } else {
+
+            // Set size of returned image. Keep it small!
+            $width = 64;
+            $height = 64;
+
+            // Decode the blurhash to an image file.
+            $pixels = KornRunnerBlurhash::decode($blurhash, $width, $height);
+            $decodedImage  = imagecreatetruecolor($width, $height);
+            for ($y = 0; $y < $height; ++$y) {
+                for ($x = 0; $x < $width; ++$x) {
+                    [$r, $g, $b] = $pixels[$y][$x];
+                    imagesetpixel($decodedImage, $x, $y, imagecolorallocate($decodedImage, $r, $g, $b));
+                }
             }
+
+            // Render the image and return it.
+            ob_start(); 
+            imagepng($decodedImage);
+            $decodedImageData = ob_get_contents();            
+            \Craft::$app->cache->set($cacheKey, $decodedImageData, 60 * 60 * 24 * 7 * 4); // Cache for approx 1 month
+            return ob_get_clean();
         }
 
-        // Render the image and return it.
-        ob_start(); 
-        imagepng($decodedImage);        
-        return ob_get_clean();
     }
 
 
@@ -209,7 +243,7 @@ class BlurHashTwigExtension extends AbstractExtension
      *
      * @return string
      */
-    private function imageToUri($image)
+    function imageToUri($image)
     {   
         return sprintf('data:%s;base64,%s', 'image/png', base64_encode($image));
     }
