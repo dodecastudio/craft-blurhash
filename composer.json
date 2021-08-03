@@ -1,5 +1,5 @@
 {
-    "name": "dodecastudio/blurhash",
+    "name": "dodecastudio/craft-blurhash",
     "description": "Render a BlurHash from a given image.",
     "type": "craft-plugin",
     "version": "1.0.0",
@@ -11,8 +11,9 @@
         "blurhash"
     ],
     "support": {
-        "docs": "https://github.com/dodecastudio/craft-blurhash.git/blob/master/README.md",
-        "issues": "https://github.com/dodecastudio/craft-blurhash.git/issues"
+        "source": "https://github.com/dodecastudio/craft-blurhash",
+        "docs": "https://github.com/dodecastudio/craft-blurhash/blob/main/README.md",
+        "issues": "https://github.com/dodecastudio/craft-blurhash/issues"
     },
     "license": "MIT",
     "authors": [
@@ -22,14 +23,9 @@
         }
     ],
     "require": {
-        "craftcms/cms": "^3.0.0",
+        "craftcms/cms": "^3.6.7",
         "kornrunner/blurhash": "^1.2",
         "treeware/plant": "^0.1.0"
-    },
-    "require-dev": {
-        "craftcms/cms": "^3.2.0",
-        "codeception/codeception": "^3.0",
-        "vlucas/phpdotenv": "^3.0"
     },
     "autoload": {
         "psr-4": {
@@ -42,8 +38,8 @@
         "handle": "blur-hash",
         "developer": "Dodeca Studio",
         "developerUrl": "https://dodeca.studio",
-        "documentationUrl": "https://github.com/github.com/dodecastudio/craft-blurhash.git/blob/master/README.md",
-        "changelogUrl": "https://raw.githubusercontent.com/github.com/dodecastudio/craft-blurhash.git/master/CHANGELOG.md",
+        "documentationUrl": "https://github.com/dodecastudio/craft-blurhash/blob/main/README.md",
+        "changelogUrl": "https://github.com/dodecastudio/craft-blurhash/blob/main/CHANGELOG.md",
         "class": "dodecastudio\\blurhash\\BlurHash"
     }
 }
