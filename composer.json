@@ -11,8 +11,8 @@
         "blurhash"
     ],
     "support": {
-        "docs": "https://github.com/DodecaStudio/craft-blurhash.git/blob/master/README.md",
-        "issues": "https://github.com/DodecaStudio/craft-blurhash.git/issues"
+        "docs": "https://github.com/dodecastudio/craft-blurhash.git/blob/master/README.md",
+        "issues": "https://github.com/dodecastudio/craft-blurhash.git/issues"
     },
     "license": "MIT",
     "authors": [
@@ -42,8 +42,8 @@
         "handle": "blur-hash",
         "developer": "Dodeca Studio",
         "developerUrl": "https://dodeca.studio",
-        "documentationUrl": "https://github.com/github.com/DodecaStudio/craft-blurhash.git/blob/master/README.md",
-        "changelogUrl": "https://raw.githubusercontent.com/github.com/DodecaStudio/craft-blurhash.git/master/CHANGELOG.md",
+        "documentationUrl": "https://github.com/github.com/dodecastudio/craft-blurhash.git/blob/master/README.md",
+        "changelogUrl": "https://raw.githubusercontent.com/github.com/dodecastudio/craft-blurhash.git/master/CHANGELOG.md",
         "class": "dodecastudio\\blurhash\\BlurHash"
     }
 }
