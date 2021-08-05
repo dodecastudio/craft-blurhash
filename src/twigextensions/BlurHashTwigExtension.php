@@ -131,7 +131,7 @@ class BlurHashTwigExtension extends AbstractExtension
         }
 
         // Set unique cacheKey
-        $cacheKey = 'blurhashstring-' . $asset->id . $asset->dateModified->format('YmdHis');
+        $cacheKey = 'blurhashstring-' . $asset->id . $asset->dateModified->format('YmdHis') . '128';
         $cachedValue = \Craft::$app->cache->get($cacheKey);
 
         // Check for cached value
@@ -139,25 +139,12 @@ class BlurHashTwigExtension extends AbstractExtension
             return $cachedValue;
             
         } else {
-            // // Get the cached value
-            // $cachedValue = \Craft::$app->cache->get($cacheKey);
 
-            // // Create a small transform in order to work with the file quickly.
-            // $assetTransform = new AssetTransform([
-            //     'mode' => 'stretch',
-            //     'width' =>  64, 
-            //     'height' => 64,
-            //     'quality' => 1,
-            // ]);
+            // Generate new image
+            $sampleSize = 128;
 
-            // // Copy asset with the transform.
-            // $transformedAsset = $asset->copyWithTransform($assetTransform);
-            // $image = imagecreatefromstring($transformedAsset->getContents());
-            // $width = imagesx($image);
-            // $height = imagesy($image);
-
-            $thumbnailImage = imagecreatetruecolor(64, 64);
-            imagecopyresampled($thumbnailImage, imagecreatefromstring($asset->getContents()), 0, 0, 0, 0, 64, 64, $asset->width, $asset->height);
+            $thumbnailImage = imagecreatetruecolor($sampleSize, $sampleSize);
+            imagecopyresampled($thumbnailImage, imagecreatefromstring($asset->getContents()), 0, 0, 0, 0, $sampleSize, $sampleSize, $asset->width, $asset->height);
             $width = imagesx($thumbnailImage);
             $height = imagesy($thumbnailImage);
             
@@ -202,7 +189,7 @@ class BlurHashTwigExtension extends AbstractExtension
         }
 
         // Set unique cacheKey
-        $cacheKey = 'blurhashimagedata-' . $blurhash;
+        $cacheKey = 'blurhashimagedata-' . $blurhash . '64';
         $cachedValue = \Craft::$app->cache->get($cacheKey);
 
         // Check for cached value
