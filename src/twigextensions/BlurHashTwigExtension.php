@@ -130,8 +130,11 @@ class BlurHashTwigExtension extends AbstractExtension
             return false;
         }
 
+        // Set size of copied / sampled image
+        $sampleSize = 64;
+
         // Set unique cacheKey
-        $cacheKey = 'blurhashstring-' . $asset->id . $asset->dateModified->format('YmdHis') . '128';
+        $cacheKey = 'blurhashstring-' . $asset->id . $asset->dateModified->format('YmdHis') . $sampleSize;
         $cachedValue = \Craft::$app->cache->get($cacheKey);
 
         // Check for cached value
@@ -140,13 +143,11 @@ class BlurHashTwigExtension extends AbstractExtension
             
         } else {
 
-            // Generate new image
-            $sampleSize = 128;
-
             $thumbnailImage = imagecreatetruecolor($sampleSize, $sampleSize);
-            imagecopyresampled($thumbnailImage, imagecreatefromstring($asset->getContents()), 0, 0, 0, 0, $sampleSize, $sampleSize, $asset->width, $asset->height);
+            $sourceImage = imagecreatefromstring($asset->getContents());
+            imagecopyresized($thumbnailImage, $sourceImage, 0, 0, 0, 0, $sampleSize, $sampleSize, $asset->width, $asset->height);
             $width = imagesx($thumbnailImage);
-            $height = imagesy($thumbnailImage);
+            $height = imagesy($thumbnailImage);            
             
             // Get colours for image
             $pixels = [];
@@ -164,8 +165,8 @@ class BlurHashTwigExtension extends AbstractExtension
             imagedestroy($thumbnailImage);
 
             // Generate a blurhash from the image data.
-            $components_x = 3;
-            $components_y = 3;
+            $components_x = $asset->width > $asset->height ? 4 : 3;
+            $components_y = $asset->width < $asset->height ? 4 : 3;
             $blurhash = KornRunnerBlurhash::encode($pixels, $components_x, $components_y);
             \Craft::$app->cache->set($cacheKey, $blurhash, 60 * 60 * 24 * 7 * 4); // Cache for approx 1 month
             return $blurhash;
@@ -188,8 +189,11 @@ class BlurHashTwigExtension extends AbstractExtension
             return false;
         }
 
+        // Set size of copied / sampled image
+        $blurredImageSize = 64;
+
         // Set unique cacheKey
-        $cacheKey = 'blurhashimagedata-' . $blurhash . '64';
+        $cacheKey = 'blurhashimagedata-' . $blurhash . $blurredImageSize;
         $cachedValue = \Craft::$app->cache->get($cacheKey);
 
         // Check for cached value
@@ -199,8 +203,8 @@ class BlurHashTwigExtension extends AbstractExtension
         } else {
 
             // Set size of returned image. Keep it small!
-            $width = 64;
-            $height = 64;
+            $width = $blurredImageSize;
+            $height = $blurredImageSize;
 
             // Decode the blurhash to an image file.
             $pixels = KornRunnerBlurhash::decode($blurhash, $width, $height);
