@@ -24,7 +24,7 @@ Install the plugin as follows:
 
 2. Then tell Composer to load the plugin:
 
-        composer require github.com/dodecastudio/craft-blurhash
+        composer require dodecastudio/craft-blurhash
 
 3. In the Control Panel, go to Settings → Plugins and click the “Install” button for BlurHash.
 
