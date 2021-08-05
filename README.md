@@ -8,6 +8,8 @@
 
 A [BlurHash](https://blurha.sh/) is a compact representation of a placeholder for an image. A blurred version of an image, useful for displaying whilst the full resolution image is loading.
 
+This plugin uses kornrunner's PHP implementation of BlurHash, [php-blurhash](https://github.com/kornrunner/php-blurhash).
+
 ## Requirements
 
 * Craft CMD 3.x
