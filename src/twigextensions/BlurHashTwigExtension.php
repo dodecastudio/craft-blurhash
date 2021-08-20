@@ -125,8 +125,9 @@ class BlurHashTwigExtension extends AbstractExtension
             return false;
         }
 
-        // Make sure the asset is an image.
-        if (0 !== strpos($asset->getMimeType(), 'image/')) {
+        // Valid file types
+        $allowed_types = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!in_array($asset->mimeType, $allowed_types)) {
             return false;
         }
 
