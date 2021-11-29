@@ -5,6 +5,7 @@ namespace dodecastudio\blurhash\gql\directives;
 use dodecastudio\blurhash\BlurHash;
 
 use Craft;
+use craft\elements\Asset;
 use craft\gql\base\Directive;
 use craft\gql\GqlEntityRegistry;
 use GraphQL\Language\DirectiveLocation;
@@ -25,7 +26,7 @@ class AverageColor extends Directive
             'locations' => [
                 DirectiveLocation::FIELD,
             ],
-            'description' => 'Take an asset and return its average color.',
+            'description' => 'Take an asset or blurhash string and return its average color.',
             'args' => [],
         ]));
 
@@ -39,6 +40,11 @@ class AverageColor extends Directive
 
     public static function apply($source, $value, array $arguments, ResolveInfo $resolveInfo)
     {
-        return BlurHash::getInstance()->blurHashServices->averageColor($source);
+        if ($source instanceof Asset && $source->kind === 'image') {
+            return BlurHash::getInstance()->blurHashServices->averageColor($source);
+        }
+
+        return BlurHash::getInstance()->blurHashServices->averageColor($value);
+        
     }
 }

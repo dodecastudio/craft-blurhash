@@ -45,7 +45,7 @@ class BlurHashService extends Component
     /**
      * blurhash: Take a blurhash string and return a data URI string.
      *
-     * @param blurhash $string
+     * @param blurhash String
      *
      * @return string
      */
@@ -125,7 +125,7 @@ class BlurHashService extends Component
     /**
      * blurhashToImage: Take a blurhash string and decode it, returning a gdimage resource.
      *
-     * @param blurhash $string
+     * @param blurhash String
      *
      * @return image
      */
@@ -168,14 +168,29 @@ class BlurHashService extends Component
 
 
     /**
-     * blurhashAverageColor: Take a blurhash string and return its average color.
+     * averageColor: Take a Craft CMS asset or a blurhash string and return its average color.
      *
-     * @param blurhash $string
+     * @param source Asset or String
      *
      * @return string
      */
-    public function blurhashAverageColor($blurhash)
-    {   
+    public function averageColor($source)
+    { 
+        $isAsset = $source instanceof Asset;
+        $isString = is_string($source);
+
+        if (!$isAsset && !$isString) {
+            return $source;
+        }
+
+        if ($isAsset) {
+            $blurhash = $this->blurhashEncode($source);
+        }
+          
+        if ($isString) {
+            $blurhash = $source;
+        }
+
         // Attempt to decode as means of validation
         try {
             $pixels = KornRunnerBlurhash::decode($blurhash, BlurHash::getInstance()->getSettings()->blurredImageWidth, BlurHash::getInstance()->getSettings()->blurredImageHeight);
@@ -194,24 +209,9 @@ class BlurHashService extends Component
 
 
     /**
-     * averageColor: Take an asset and return its average color.
-     *
-     * @param asset $asset
-     *
-     * @return string
-     */
-    public function averageColor($asset)
-    {   
-
-        $blurhash = $this->blurhashEncode($asset);
-        return $this->blurhashAverageColor($blurhash);
-    }
-
-
-    /**
      * imageToUri: Takes an image resource and converts it to a data URI string.
      *
-     * @param image $string
+     * @param image String
      *
      * @return string
      */

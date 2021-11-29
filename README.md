@@ -89,7 +89,7 @@ If you already have a blurhash string and want to generate an image from it, you
 BlurHash strings contain the average color for the image. You can decode this value from a BlurHash string and return it as a [Craft ColorData object](https://docs.craftcms.com/api/v3/craft-fields-data-colordata.html#public-properties).
 
 ```twig
-{{ blurhashAverageColor('K-I#.3ofof_4ofj[%Mayay') }}
+{{ averageColor('K-I#.3ofof_4ofj[%Mayay') }}
 ```
 
 ...or directly from an asset:

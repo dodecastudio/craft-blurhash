@@ -55,7 +55,7 @@ class BlurHashTwigExtension extends AbstractExtension
         return [
             new TwigFunction('blurhash', [$this, 'blurhash']),
             new TwigFunction('blurhashToUri', [$this, 'blurhashToUri']),
-            new TwigFunction('blurhashAverageColor', [$this, 'blurhashAverageColor']),
+            new TwigFunction('averageColor', [$this, 'averageColor']),
         ];
     }
 
@@ -76,7 +76,7 @@ class BlurHashTwigExtension extends AbstractExtension
     /**
      * blurhash: Take a blurhash string and return a data URI string.
      *
-     * @param blurhash $string
+     * @param blurhash String
      *
      * @return string
      */
@@ -100,27 +100,14 @@ class BlurHashTwigExtension extends AbstractExtension
 
 
     /**
-     * averageColor: Take a Craft CMS asset and return its average color.
+     * averageColor: Take a Craft CMS asset or a Craft CMS asset and return its average color.
      *
-     * @param asset Asset
-     *
-     * @return image
-     */
-    public function averageColor($asset)
-    {
-        return BlurHash::getInstance()->blurHashServices->averageColor($asset);
-    }
-
-
-    /**
-     * blurhashAverageColor: Take a blurhash string and return its average color.
-     *
-     * @param blurhash $string
+     * @param source Asset or String
      *
      * @return image
      */
-    public function blurhashAverageColor($blurhash)
+    public function averageColor($source)
     {
-        return BlurHash::getInstance()->blurHashServices->blurhashAverageColor($blurhash);
+        return BlurHash::getInstance()->blurHashServices->averageColor($source);
     }
 }
