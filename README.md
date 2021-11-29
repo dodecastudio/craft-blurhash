@@ -90,12 +90,15 @@ BlurHash strings contain the average color for the image. You can decode this va
 
 ```twig
 {{ averageColor('K-I#.3ofof_4ofj[%Mayay') }}
+{{ averageColor('K-I#.3ofof_4ofj[%Mayay').getRgb() }}
 ```
 
 ...or directly from an asset:
 
 ```twig
 {{ testAsset|averageColor }}
+{{ averageColor(testAsset) }}
+{{ averageColor(testAsset).getRgb() }}
 ```
 
 ### GraphQL Support
@@ -104,7 +107,7 @@ As of v1.1.0 it's possible to use the plugin via Graph QL. The same functionalit
 
 #### Returning a blurhash data URI from an asset field
 
-An asset field can be returned as a dataURI to a blurhash image using the `@assetToBlurHash` directive like so:
+An asset field can be returned as a dataURI to a blurhash image using the `@assetToBlurHash` directive. It can also be used to return a blurhash string by setting the `asUri` argument to `false`.
 
 ```graphql
 {
@@ -112,6 +115,7 @@ An asset field can be returned as a dataURI to a blurhash image using the `@asse
     title
     ... on news_article_Entry {
       asset {
+        blurhashString: url @assetToBlurHash(asUri: false)
         blurhashUri: url @assetToBlurHash
       }
     }
@@ -129,6 +133,7 @@ This will return some JSON which looks a bit something like this:
         "title": "An important news item",
         "asset": [
           {
+            "blurhashString": "K-I#.3ofof_4ofj[%Mayay",
             "blurhashUri": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAB..."
           }
         ]
@@ -138,41 +143,7 @@ This will return some JSON which looks a bit something like this:
 }
 ```
 
-If you just want a blurhash string, and not a data URI, you can set the `asUri` argument to `false`, like this:
-
-```graphql
-{
-  entries(section: "news") {
-    title
-    ... on news_article_Entry {
-      asset {
-        blurhashString: url @assetToBlurHash(asUri: false)
-      }
-    }
-  }
-}
-```
-
-This will then return this sort of result in our JSON:
-
-```json
-{
-  "data": {
-    "entries": [
-      {
-        "title": "An important news item",
-        "asset": [
-          {
-            "blurhashString": "K-I#.3ofof_4ofj[%Mayay"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
-
-#### Rendering a blurhash image from a blurhash string
+#### Rendering a blurhash image from a plaintext blurhash string
 
 If you have a blurhash string saved in a Craft, you can render it to a data URI using the `@blurhashToUri` directive. In this example, there is a plaintext field called `blurhashStringField` stored in our news article entry.
 
@@ -181,7 +152,7 @@ If you have a blurhash string saved in a Craft, you can render it to a data URI 
   entries(section: "news") {
     title
     blurhashStringField
-    blurhashImage: blurhashStringField @blurhashToUri
+    blurhashUri: blurhashStringField @blurhashToUri
   }
 }
 ```
@@ -195,7 +166,7 @@ And that will then give us some JSON that looks a bit like this:
       {
         "title": "An important news item",
         "blurhashStringField": "K-I#.3ofof_4ofj[%Mayay",
-        "blurhashImage": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAB..."
+        "blurhashUri": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAB..."
       }
     ]
   }
@@ -211,6 +182,7 @@ If you want to return the average color for an image saved in Craft, you can use
   entries(section: "news") {
     title
     ... on news_article_Entry {
+      blurhashStringField @averageColor
       asset {
         averageColor: url @averageColor
       }
@@ -227,6 +199,7 @@ Which will return you some JSON like this:
     "entries": [
       {
         "title": "An important news item",
+        "blurhashStringField": "#a3a696",
         "asset": [
           {
             "averageColor": "#817c82"

@@ -4,7 +4,7 @@
 
 ### Added
 
-- Added new Twig Function `averageColor` and GraphQL directive `averageColor`, which returns the average color of an image asset or blurhash string.
+- New Twig Function `averageColor` and GraphQL directive `averageColor`, which returns the average color of an image asset or blurhash string.
 
 ## 1.1.0 - 2021-11-29
 
