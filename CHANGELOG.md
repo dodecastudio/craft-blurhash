@@ -1,8 +1,14 @@
 # BlurHash Changelog
 
+## 1.1.1 - 2021-11-30
+
+### Added
+
+- New Twig Function `blurhashAverageColor` to return the average color of the blurhash image.
+
 ## 1.1.0 - 2021-11-29
 
-### Fixed
+### Added
 
 - Added GraphQL Support (thanks to @stuible on GitHub for the suggestion 🙌).
 - Moved all functions to a Service class (thanks to @MoritzLost on Stack Exchange for the suggestion 🙌).

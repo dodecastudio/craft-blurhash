@@ -84,6 +84,20 @@ If you already have a blurhash string and want to generate an image from it, you
 <img src="{{ blurhashToUri('K-I#.3ofof_4ofj[%Mayay') }}" width="256" height="256" alt="Blurhash image" />
 ```
 
+#### Returning average color for an image
+
+BlurHash strings contain the average color for the image. You can decode this value from a BlurHash string and return it as a [Craft ColorData object](https://docs.craftcms.com/api/v3/craft-fields-data-colordata.html#public-properties).
+
+```twig
+{{ blurhashAverageColor('K-I#.3ofof_4ofj[%Mayay') }}
+```
+
+...or directly from an asset:
+
+```twig
+{{ testAsset|averageColor }}
+```
+
 ### GraphQL Support
 
 As of v1.1.0 it's possible to use the plugin via Graph QL. The same functionality that's available with the Twig functions, is now available through Graph QL directives.
@@ -160,7 +174,7 @@ This will then return this sort of result in our JSON:
 
 #### Rendering a blurhash image from a blurhash string
 
-Lastly, if you have a blurhash string saved in a Craft, you can render it to a data URI using the `@blurhashToUri` directive. In this example, there is a plaintext field called `blurhashStringField` stored in our news article entry.
+If you have a blurhash string saved in a Craft, you can render it to a data URI using the `@blurhashToUri` directive. In this example, there is a plaintext field called `blurhashStringField` stored in our news article entry.
 
 ```graphql
 {
@@ -182,6 +196,42 @@ And that will then give us some JSON that looks a bit like this:
         "title": "An important news item",
         "blurhashStringField": "K-I#.3ofof_4ofj[%Mayay",
         "blurhashImage": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAB..."
+      }
+    ]
+  }
+}
+```
+
+#### Getting an average color for an image
+
+If you want to return the average color for an image saved in Craft, you can use the `@averageColor` directive. This returns a hex color value as a string.
+
+```graphql
+{
+  entries(section: "news") {
+    title
+    ... on news_article_Entry {
+      asset {
+        averageColor: url @averageColor
+      }
+    }
+  }
+}
+```
+
+Which will return you some JSON like this:
+
+```
+{
+  "data": {
+    "entries": [
+      {
+        "title": "An important news item",
+        "asset": [
+          {
+            "averageColor": "#817c82"
+          }
+        ]
       }
     ]
   }

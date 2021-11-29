@@ -61,7 +61,7 @@ class AssetToBlurHash extends Directive
 
         try {
             $result = $asUri ? BlurHash::getInstance()->blurHashServices->blurhash($source) : BlurHash::getInstance()->blurHashServices->blurhashEncode($source);
-        } catch (ImagerException $e) {
+        } catch (BlurHash $e) {
             Craft::error('An error occured trying to generate the BlurHash image in the @assetToBlurHash GraphQL directive: ' . $e->getMessage(), __METHOD__);
             return null;
         }

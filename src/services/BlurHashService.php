@@ -16,8 +16,11 @@ use Craft;
 use craft\base\Component;
 use craft\elements\Asset;
 use craft\models\AssetTransform;
+use craft\fields\data\ColorData;
+use craft\validators\ColorValidator;
 
 use kornrunner\Blurhash\Blurhash as KornRunnerBlurhash;
+use kornrunner\Blurhash\Base83;
 
 class BlurHashService extends Component
 {
@@ -93,7 +96,7 @@ class BlurHashService extends Component
             $width = imagesx($thumbnailImage);
             $height = imagesy($thumbnailImage);            
             
-            // Get colours for image
+            // Get colors for image
             $pixels = [];
             for ($y = 0; $y < $height; ++$y) {
                 $row = [];
@@ -133,11 +136,8 @@ class BlurHashService extends Component
             return false;
         }
 
-        // Set size of copied / sampled image
-        $blurredImageSize = 64;
-
         // Set unique cacheKey
-        $cacheKey = 'blurhashimagedata-' . $blurhash . $blurredImageSize;
+        $cacheKey = 'blurhashimagedata-' . $blurhash . BlurHash::getInstance()->getSettings()->blurredImageWidth . BlurHash::getInstance()->getSettings()->blurredImageHeight;
         $cachedValue = \Craft::$app->cache->get($cacheKey);
 
         // Check for cached value
@@ -146,15 +146,11 @@ class BlurHashService extends Component
             
         } else {
 
-            // Set size of returned image. Keep it small!
-            $width = $blurredImageSize;
-            $height = $blurredImageSize;
-
             // Decode the blurhash to an image file.
-            $pixels = KornRunnerBlurhash::decode($blurhash, $width, $height);
-            $decodedImage  = imagecreatetruecolor($width, $height);
-            for ($y = 0; $y < $height; ++$y) {
-                for ($x = 0; $x < $width; ++$x) {
+            $pixels = KornRunnerBlurhash::decode($blurhash, BlurHash::getInstance()->getSettings()->blurredImageWidth, BlurHash::getInstance()->getSettings()->blurredImageHeight);
+            $decodedImage  = imagecreatetruecolor(BlurHash::getInstance()->getSettings()->blurredImageWidth, BlurHash::getInstance()->getSettings()->blurredImageHeight);
+            for ($y = 0; $y < BlurHash::getInstance()->getSettings()->blurredImageHeight; ++$y) {
+                for ($x = 0; $x < BlurHash::getInstance()->getSettings()->blurredImageWidth; ++$x) {
                     [$r, $g, $b] = $pixels[$y][$x];
                     imagesetpixel($decodedImage, $x, $y, imagecolorallocate($decodedImage, $r, $g, $b));
                 }
@@ -168,6 +164,47 @@ class BlurHashService extends Component
             return ob_get_clean();
         }
 
+    }
+
+
+    /**
+     * blurhashAverageColor: Take a blurhash string and return its average color.
+     *
+     * @param blurhash $string
+     *
+     * @return string
+     */
+    public function blurhashAverageColor($blurhash)
+    {   
+        // Attempt to decode as means of validation
+        try {
+            $pixels = KornRunnerBlurhash::decode($blurhash, BlurHash::getInstance()->getSettings()->blurredImageWidth, BlurHash::getInstance()->getSettings()->blurredImageHeight);
+        } catch (KornRunnerBlurhash $e) {
+            Craft::error('An error occured trying to decode the BlurHash string: ' . $e->getMessage(), __METHOD__);
+            return null;
+        }
+
+        $averageColor = substr($blurhash, 2, 4);
+        $srgb = Base83::decode($averageColor);
+        $hex = "#" . dechex($srgb);
+
+        $value = ColorValidator::normalizeColor($hex);
+        return new ColorData($value);
+    }
+
+
+    /**
+     * averageColor: Take an asset and return its average color.
+     *
+     * @param asset $asset
+     *
+     * @return string
+     */
+    public function averageColor($asset)
+    {   
+
+        $blurhash = $this->blurhashEncode($asset);
+        return $this->blurhashAverageColor($blurhash);
     }
 
 

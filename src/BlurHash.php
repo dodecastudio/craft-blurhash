@@ -11,6 +11,7 @@
 namespace dodecastudio\blurhash;
 
 use dodecastudio\blurhash\models\Settings;
+use dodecastudio\blurhash\gql\directives\AverageColor;
 use dodecastudio\blurhash\gql\directives\BlurHashToUri;
 use dodecastudio\blurhash\gql\directives\AssetToBlurHash;
 use dodecastudio\blurhash\services\BlurHashService;
@@ -76,6 +77,7 @@ class BlurHash extends Plugin
             Gql::class,
             Gql::EVENT_REGISTER_GQL_DIRECTIVES,
             function(RegisterGqlDirectivesEvent $event) {
+                $event->directives[] = AverageColor::class;
                 $event->directives[] = BlurHashToUri::class;
                 $event->directives[] = AssetToBlurHash::class;
             }
