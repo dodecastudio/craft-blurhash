@@ -68,38 +68,5 @@ class AssetToBlurHash extends Directive
         
         return $result;
 
-
-        // $onAssetElement = $value instanceof Asset;
-        // $onAssetElementList = is_array($value) && !empty($value);
-        // $onApplicableAssetField = $source instanceof Asset;
-        // $asUri = $arguments['inlineOnly'] ?? self::DEFAULT_AS_URI;
-
-        // if (!($onAssetElement || $onAssetElementList || $onApplicableAssetField)) {
-        //     return $value;
-        // }
-
-        // // If this directive is applied to a single asset
-        // if ($onAssetElement) {
-        //     return $value->setTransform($transform);
-        // }
-
-        // // ...or a list of assets
-        // if ($onAssetElementList) {
-        //     foreach ($value as &$asset) {
-        //         if ($asset instanceof Asset) {
-        //             $asset->setTransform($transform);
-        //         }
-        //     }
-        //     return $value;
-        // }
-
-        // // $sourceAsset = $onApplicableAssetField ? $source : $value;
-
-        // // $result = $asUri ? BlurHash::getInstance()->blurHashServices->blurhash($sourceAsset) : BlurHash::getInstance()->blurHashServices->blurhashEncode($sourceAsset);
-
-        // // return $result;
-
-        // return $value;
-
     }
 }
