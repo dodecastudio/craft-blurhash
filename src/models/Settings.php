@@ -13,7 +13,7 @@ class Settings extends Model
     public $blurredImageWidth = 64;
     public $blurredImageHeight = 64;
 
-    public function rules()
+    public function rules(): array
     {
         return [
             ['allowedFileTypes', 'required'],
