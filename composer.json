@@ -23,7 +23,7 @@
     }
   ],
   "require": {
-    "craftcms/cms": "^3.0|^4.0",
+    "craftcms/cms": "^4.0.0-beta",
     "kornrunner/blurhash": "^1.2",
     "treeware/plant": "^0.1.0"
   },
