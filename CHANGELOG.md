@@ -1,11 +1,5 @@
 # BlurHash Changelog
 
-## 1.2.0 - 2022-03-09
-
-### Added
-
-- Support for [Craft CMS 4](https://craftcms.com/blog/craft-4-beta)
-
 ## 1.1.1 - 2021-11-30
 
 ### Added
