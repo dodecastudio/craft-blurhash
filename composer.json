@@ -3,6 +3,7 @@
   "description": "Render a BlurHash from a given image.",
   "type": "craft-plugin",
   "version": "1.1.1",
+  "license": "MIT",
   "keywords": [
     "craft",
     "cms",
@@ -15,7 +16,6 @@
     "docs": "https://github.com/dodecastudio/craft-blurhash/blob/main/README.md",
     "issues": "https://github.com/dodecastudio/craft-blurhash/issues"
   },
-  "license": "MIT",
   "authors": [
     {
       "name": "Dodeca Studio",
