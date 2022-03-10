@@ -15,6 +15,7 @@ use dodecastudio\blurhash\BlurHash;
 use Craft;
 use craft\base\Component;
 use craft\elements\Asset;
+use craft\models\AssetTransform;
 use craft\fields\data\ColorData;
 use craft\validators\ColorValidator;
 
@@ -185,10 +186,10 @@ class BlurHashService extends Component
         if ($isAsset) {
             $blurhash = $this->blurhashEncode($source);
         }
-
+          
         if ($isString) {
             $blurhash = $source;
-        } 
+        }
 
         // Attempt to decode as means of validation
         try {

@@ -47,17 +47,17 @@ class BlurHash extends Plugin
     /**
      * @var string
      */
-    public string $schemaVersion = '1.0.0';
+    public $schemaVersion = '1.0.0';
 
     /**
      * @var bool
      */
-    public bool $hasCpSettings = false;
+    public $hasCpSettings = false;
 
     /**
      * @var bool
      */
-    public bool $hasCpSection = false;
+    public $hasCpSection = false;
 
     // Public Methods
 
@@ -95,7 +95,7 @@ class BlurHash extends Plugin
 
     // Settings
 
-    protected function createSettingsModel(): ?\craft\base\Model
+    protected function createSettingsModel()
     {
         return new Settings();
     }
