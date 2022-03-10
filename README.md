@@ -12,8 +12,8 @@ This plugin uses kornrunner's PHP implementation of BlurHash, [php-blurhash](htt
 
 ## Requirements
 
-- Craft CMS 3.x or 4.x
-- PHP 7.2.5+ (Craft CMS 3.x version) or PHP 8.0.2+ (Craft CMS 4.x version)
+- Craft CMS 4.x
+- PHP 8.0.2+
 - GD / ImageMagick (_as required by Craft CMS_)
 
 ## Installation
