@@ -1,4 +1,4 @@
-# BlurHash plugin for Craft CMS 3.x
+# BlurHash plugin for Craft CMS
 
 [![Buy us a tree](https://img.shields.io/badge/Treeware-%F0%9F%8C%B3-lightgreen)](https://plant.treeware.earth/dodecastudio/craft-blurhash)
 
@@ -12,8 +12,8 @@ This plugin uses kornrunner's PHP implementation of BlurHash, [php-blurhash](htt
 
 ## Requirements
 
-- Craft CMD 3.x
-- PHP 7.3 or higher
+- Craft CMS 3.x
+- PHP 7.2.5+
 - GD / ImageMagick (_as required by Craft CMS_)
 
 ## Installation
@@ -107,7 +107,7 @@ As of v1.1.0 it's possible to use the plugin via Graph QL. The same functionalit
 
 #### Returning a blurhash data URI from an asset field
 
-An asset field can be returned as a dataURI to a blurhash image using the `@assetToBlurHash` directive. It can also be used to return a blurhash string by setting the `asUri` argument to `false`.
+An asset field can be returned as a data uri to a blurhash image using the `@assetToBlurHash` directive. It can also be used to return a blurhash string by setting the `asUri` argument to `false`.
 
 ```graphql
 {
