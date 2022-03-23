@@ -35,7 +35,7 @@ class BlurHashService extends Component
     public function blurhash($asset)
     {
         $blurhash = $this->blurhashEncode($asset);
-        $blurhashImage = $this->blurhashToImage($blurhash);
+        $blurhashImage = $this->blurhashToImage($blurhash, $asset);
         $blurhashImageDataUri = $this->imageToUri($blurhashImage);
         
         return $blurhashImageDataUri;
@@ -89,12 +89,11 @@ class BlurHashService extends Component
             return $cachedValue;
             
         } else {
-
             $thumbnailImage = imagecreatetruecolor($sampleSize, $sampleSize);
             $sourceImage = imagecreatefromstring($asset->getContents());
             imagecopyresized($thumbnailImage, $sourceImage, 0, 0, 0, 0, $sampleSize, $sampleSize, $asset->width, $asset->height);
             $width = imagesx($thumbnailImage);
-            $height = imagesy($thumbnailImage);            
+            $height = imagesy($thumbnailImage);
             
             // Get colors for image
             $pixels = [];
@@ -112,8 +111,8 @@ class BlurHashService extends Component
             imagedestroy($thumbnailImage);
 
             // Generate a blurhash from the image data.
-            $components_x = $asset->width > $asset->height ? 4 : 3;
-            $components_y = $asset->width < $asset->height ? 4 : 3;
+            $components_x = $asset->width > $asset->height ? 6 : round(6 * ($asset->width / $asset->height));
+            $components_y = $asset->width < $asset->height ? 6 : round(6 * ($asset->height / $asset->width));
             $blurhash = KornRunnerBlurhash::encode($pixels, $components_x, $components_y);
             \Craft::$app->cache->set($cacheKey, $blurhash, 60 * 60 * 24 * 7 * 4); // Cache for approx 1 month
             return $blurhash;
@@ -129,15 +128,24 @@ class BlurHashService extends Component
      *
      * @return image
      */
-    private function blurhashToImage($blurhash)
+    private function blurhashToImage($blurhash, $asset = false)
     {
         // Check we're given a string.
         if (!is_string($blurhash)) {
             return false;
         }
 
+        // Make sure it is an asset object
+        if ($asset !== false && $asset instanceof Asset) {
+            $blurredImageWidth = round(BlurHash::getInstance()->getSettings()->blurredImageWidth * ($asset->width > $asset->height ? 1 : $asset->width / $asset->height));
+            $blurredImageHeight = round(BlurHash::getInstance()->getSettings()->blurredImageHeight * ($asset->height > $asset->width ? 1 : $asset->height / $asset->width));
+        } else {
+            $blurredImageWidth = BlurHash::getInstance()->getSettings()->blurredImageWidth;
+            $blurredImageHeight = BlurHash::getInstance()->getSettings()->blurredImageHeight;
+        }
+        
         // Set unique cacheKey
-        $cacheKey = 'blurhashimagedata-' . $blurhash . BlurHash::getInstance()->getSettings()->blurredImageWidth . BlurHash::getInstance()->getSettings()->blurredImageHeight;
+        $cacheKey = 'blurhashimagedata-' . $blurhash . $blurredImageWidth . $blurredImageHeight;
         $cachedValue = \Craft::$app->cache->get($cacheKey);
 
         // Check for cached value
@@ -147,10 +155,10 @@ class BlurHashService extends Component
         } else {
 
             // Decode the blurhash to an image file.
-            $pixels = KornRunnerBlurhash::decode($blurhash, BlurHash::getInstance()->getSettings()->blurredImageWidth, BlurHash::getInstance()->getSettings()->blurredImageHeight);
-            $decodedImage  = imagecreatetruecolor(BlurHash::getInstance()->getSettings()->blurredImageWidth, BlurHash::getInstance()->getSettings()->blurredImageHeight);
-            for ($y = 0; $y < BlurHash::getInstance()->getSettings()->blurredImageHeight; ++$y) {
-                for ($x = 0; $x < BlurHash::getInstance()->getSettings()->blurredImageWidth; ++$x) {
+            $pixels = KornRunnerBlurhash::decode($blurhash, $blurredImageWidth, $blurredImageHeight);
+            $decodedImage  = imagecreatetruecolor($blurredImageWidth, $blurredImageHeight);
+            for ($y = 0; $y < $blurredImageHeight; ++$y) {
+                for ($x = 0; $x < $blurredImageWidth; ++$x) {
                     [$r, $g, $b] = $pixels[$y][$x];
                     imagesetpixel($decodedImage, $x, $y, imagecolorallocate($decodedImage, $r, $g, $b));
                 }
