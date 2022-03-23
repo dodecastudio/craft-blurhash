@@ -1,6 +1,12 @@
 # BlurHash Changelog
 
+## 1.2.2 - 2022-03-23
+
+- Ensures blurhash images are to the same aspect ratio as the original Craft asset.
+- A demo template has been added - copy it to your Craft CMS project to get started. Find it in `resources/demo.twig`.
+
 ## 1.2.1 - 2022-03-10
+
 - This should fix a previous release error. `main` branch is now for Craft 3 and there is a separate `craft-4` branch, for the Craft 4 release.
 
 ## 1.1.1 - 2021-11-30
