@@ -2,7 +2,7 @@
   "name": "dodecastudio/craft-blurhash",
   "description": "Render a BlurHash from a given image.",
   "type": "craft-plugin",
-  "version": "2.0.0-beta.1",
+  "version": "2.0.0-beta.2",
   "keywords": [
     "craft",
     "cms",
@@ -15,7 +15,6 @@
     "docs": "https://github.com/dodecastudio/craft-blurhash/blob/main/README.md",
     "issues": "https://github.com/dodecastudio/craft-blurhash/issues"
   },
-  "license": "MIT",
   "authors": [
     {
       "name": "Dodeca Studio",
@@ -41,7 +40,5 @@
     "documentationUrl": "https://github.com/dodecastudio/craft-blurhash/blob/main/README.md",
     "changelogUrl": "https://github.com/dodecastudio/craft-blurhash/blob/main/CHANGELOG.md",
     "class": "dodecastudio\\blurhash\\BlurHash"
-  },
-  "minimum-stability": "dev",
-  "prefer-stable": true
+  }
 }

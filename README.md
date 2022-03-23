@@ -55,8 +55,10 @@ To use the plugin, first grab an asset from Craft, perhaps something like this:
 You can then pass your asset to the plugin's `blurhash` function, which will return a blurhash image as a data-url, perfect for using in an `img` element like so:
 
 ```twig
-<img src="{{ blurhash(testAsset) }}" width="{{testAsset.width}}" height="{{testAsset.height}}" />
+<img src="{{ blurhash(testAsset) }}" width="{{testAsset.width}}" height="{{testAsset.height}}" style="aspect-ratio: {{testAsset.width}} / {{testAsset.height}};" />
 ```
+
+Note: Due to the compact dimensions of the blurhash image, its aspect ratio may differ fractionally from the source material. Ensure any image markup correctly renders the aspect ratio based on the source markup if you are trying to prevent [CLS](https://web.dev/cls/). One way to achieve this is to use the [CSS `aspect-ratio` property](https://developer.mozilla.org/en-US/docs/Web/CSS/aspect-ratio), as used in the example above.
 
 ### Other features
 
@@ -71,7 +73,7 @@ If you just want to generate just a blurhash string from a given asset, you can 
 Which will return something like this:
 
 ```twig
-K-I#.3ofof_4ofj[%Mayay
+f+IrKQogj]j[ayj[_4ofj[j[ayj[%NazayfQj[j[t6ayWBayofj[Rjj[j@fQj[ay
 ```
 
 You might want to store this in some way, for use later.
@@ -81,16 +83,18 @@ You might want to store this in some way, for use later.
 If you already have a blurhash string and want to generate an image from it, you can use the `blurhashToUri` function like this:
 
 ```twig
-<img src="{{ blurhashToUri('K-I#.3ofof_4ofj[%Mayay') }}" width="256" height="256" alt="Blurhash image" />
+<img src="{{ blurhashToUri('f+IrKQogj]j[ayj[_4ofj[j[ayj[%NazayfQj[j[t6ayWBayofj[Rjj[j@fQj[ay') }}" width="256" height="256" alt="Blurhash image" />
 ```
+
+Note that blurhash strings do not have any data encoded about the size or scale of the image. You may need additional information in order to display the correct aspect ratio.
 
 #### Returning average color for an image
 
 BlurHash strings contain the average color for the image. You can decode this value from a BlurHash string and return it as a [Craft ColorData object](https://docs.craftcms.com/api/v3/craft-fields-data-colordata.html#public-properties).
 
 ```twig
-{{ averageColor('K-I#.3ofof_4ofj[%Mayay') }}
-{{ averageColor('K-I#.3ofof_4ofj[%Mayay').getRgb() }}
+{{ averageColor('f+IrKQogj]j[ayj[_4ofj[j[ayj[%NazayfQj[j[t6ayWBayofj[Rjj[j@fQj[ay') }}
+{{ averageColor('f+IrKQogj]j[ayj[_4ofj[j[ayj[%NazayfQj[j[t6ayWBayofj[Rjj[j@fQj[ay').getRgb() }}
 ```
 
 ...or directly from an asset:
@@ -133,7 +137,7 @@ This will return some JSON which looks a bit something like this:
         "title": "An important news item",
         "asset": [
           {
-            "blurhashString": "K-I#.3ofof_4ofj[%Mayay",
+            "blurhashString": "f+IrKQogj]j[ayj[_4ofj[j[ayj[%NazayfQj[j[t6ayWBayofj[Rjj[j@fQj[ay",
             "blurhashUri": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAB..."
           }
         ]
@@ -165,7 +169,7 @@ And that will then give us some JSON that looks a bit like this:
     "entries": [
       {
         "title": "An important news item",
-        "blurhashStringField": "K-I#.3ofof_4ofj[%Mayay",
+        "blurhashStringField": "f+IrKQogj]j[ayj[_4ofj[j[ayj[%NazayfQj[j[t6ayWBayofj[Rjj[j@fQj[ay",
         "blurhashUri": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAB..."
       }
     ]
