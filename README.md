@@ -231,6 +231,6 @@ And why not? By contributing to the Treeware forest you’ll be creating employm
 
 ### Thanks! 🙌
 
-Shout-out to [@olsp](https://github.com/olsp) for buying 100 trees.
+Shout-out to [@olsp](https://github.com/olsp) for [buying 100 trees](https://ecologi.com/treeware?tileId=623c81be1644e1fb9a93ad35).
 
 If you've purchased trees through Ecologi, as part of the Treeware license, please let us know for a shout-out.
