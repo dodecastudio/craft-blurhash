@@ -40,6 +40,7 @@ class BlurHashTwigExtension extends AbstractExtension
         return [
             new TwigFilter('blurhash', [$this, 'blurhashEncode']),
             new TwigFilter('averageColor', [$this, 'averageColor']),
+            new TwigFilter('memoryInfo', [$this, 'memoryInfo']),
         ];
     }
 
@@ -109,5 +110,17 @@ class BlurHashTwigExtension extends AbstractExtension
     public function averageColor($source)
     {
         return BlurHash::getInstance()->blurHashServices->averageColor($source);
+    }
+
+
+    /**
+     * memoryInfo: Return some information about memory usage.
+     *
+     * @param asset Asset
+     *
+     * @return string
+     */
+    public function memoryInfo($asset, $infoType = false) {
+        return BlurHash::getInstance()->blurHashServices->memoryInfo($asset, $infoType);
     }
 }

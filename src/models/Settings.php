@@ -8,6 +8,10 @@ class Settings extends Model
 {
     // Allowed image types.
     public $allowedFileTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+    // Allowed info types
+    public $allowedInfoTypes = ['required', 'usage'];
+    public $DEFAULT_INFO_TYPE = 'required';
     
     // Size of blurred image. Smaller is better for performance.
     public $blurredImageWidth = 64;
@@ -19,6 +23,7 @@ class Settings extends Model
             ['allowedFileTypes', 'required'],
             ['blurredImageWidth', 'required'],
             ['blurredImageHeight', 'required'],
+            ['allowedInfoTypes', 'required'],
         ];
     }
 }

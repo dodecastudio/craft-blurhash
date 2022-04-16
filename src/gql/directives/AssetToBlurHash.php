@@ -28,6 +28,7 @@ class AssetToBlurHash extends Directive
             'locations' => [
                 DirectiveLocation::FIELD,
             ],
+            'description' => 'Take a Craft CMS asset and return it as a data URI or blurhash string.',
             'args' => [
                 new FieldArgument([
                     'name' => 'asUri',
@@ -36,7 +37,6 @@ class AssetToBlurHash extends Directive
                     'description' => 'Whether to encode the blurhash string as a data URI.',
                 ]),
             ],
-            'description' => 'Take a Craft CMS asset and return it as a data URI or blurhash string.',
         ]));
 
         return $type;
