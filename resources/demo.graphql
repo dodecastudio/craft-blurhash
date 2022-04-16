@@ -3,7 +3,6 @@ query assetQuery {
   asset(id: 1) {
     filename
     requiredMemory: url @memoryInfo
-    memoryUsage: url @memoryInfo(infoType: "usage")
     blurhashString: url @assetToBlurHash(asUri: false)
     blurhashUri: url @assetToBlurHash
     averageColor: url @averageColor
