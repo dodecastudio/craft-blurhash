@@ -107,11 +107,10 @@ BlurHash strings contain the average color for the image. You can decode this va
 
 #### Returning memory info
 
-Images need to be loaded in to memory in order to be read, and a blurhash generated. This helper function will tell you approximately how much memory (in bytes) will be needed for a given image. You can also return the current memory usage.
+Images need to be loaded in to memory in order to be read, and a blurhash generated. This helper function will tell you approximately how much memory (in bytes) will be needed for a given image.
 
 ```twig
 {{ testAsset|memoryInfo }}
-{{ testAsset|memoryInfo('usage') }}
 ```
 
 ### GraphQL Support
