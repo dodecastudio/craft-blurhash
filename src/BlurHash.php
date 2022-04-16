@@ -14,6 +14,7 @@ use dodecastudio\blurhash\models\Settings;
 use dodecastudio\blurhash\gql\directives\AverageColor;
 use dodecastudio\blurhash\gql\directives\BlurHashToUri;
 use dodecastudio\blurhash\gql\directives\AssetToBlurHash;
+use dodecastudio\blurhash\gql\directives\MemoryInfo;
 use dodecastudio\blurhash\services\BlurHashService;
 use dodecastudio\blurhash\twigextensions\BlurHashTwigExtension;
 
@@ -80,6 +81,7 @@ class BlurHash extends Plugin
                 $event->directives[] = AverageColor::class;
                 $event->directives[] = BlurHashToUri::class;
                 $event->directives[] = AssetToBlurHash::class;
+                $event->directives[] = MemoryInfo::class;
             }
         );
 

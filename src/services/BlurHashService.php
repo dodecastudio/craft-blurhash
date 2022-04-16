@@ -35,6 +35,10 @@ class BlurHashService extends Component
     public function blurhash($asset)
     {
         $blurhash = $this->blurhashEncode($asset);
+        // Quit if blurhashEncode failed
+        if (!$blurhash) {
+            return false;
+        }
         $blurhashImage = $this->blurhashToImage($blurhash, $asset);
         $blurhashImageDataUri = $this->imageToUri($blurhashImage);
         
@@ -59,6 +63,44 @@ class BlurHashService extends Component
 
 
     /**
+     * validAsset: Check an asset is valid
+     *
+     * @param asset Asset
+     *
+     * @return string
+     */
+    private function validAsset($asset) {
+
+        // Make sure it is an asset object
+        if (!$asset instanceof Asset) {
+            return false;
+        }
+
+        // Ensure it's a supported file type
+        if (!in_array($asset->mimeType, BlurHash::getInstance()->getSettings()->allowedFileTypes)) {
+            return false;
+        }
+
+        // Check file exists
+        if($asset->getVolume()->fileExists($asset)) {
+            return false;
+        }
+
+        // Check size isn't too big
+        if($asset->getVolume()->fileExists($asset)) {
+            return false;
+        }
+
+
+
+        return true;
+    
+    }
+
+    
+
+
+    /**
      * blurhashEncode: Take a Craft CMS asset and return a blurhash string from it.
      *
      * @param asset Asset
@@ -67,13 +109,9 @@ class BlurHashService extends Component
      */
     public function blurhashEncode($asset)
     {
-        // Make sure it is an asset object
-        if (!$asset instanceof Asset) {
-            return false;
-        }
 
-        // Valid file types
-        if (!in_array($asset->mimeType, BlurHash::getInstance()->getSettings()->allowedFileTypes)) {
+        // Check it's a valid asset resource
+        if (!$this->validAsset($asset)) {
             return false;
         }
 
@@ -187,14 +225,21 @@ class BlurHashService extends Component
         $isAsset = $source instanceof Asset;
         $isString = is_string($source);
 
+        // If we've not got a string or an asset, return the original value
         if (!$isAsset && !$isString) {
             return $source;
         }
 
+        // If it's an asset
         if ($isAsset) {
+            // Check it's valid
+            if (!$this->validAsset($source)) {
+                return new ColorData("#000000");
+            }
             $blurhash = $this->blurhashEncode($source);
         }
           
+        // If we've just got a string then continue with that
         if ($isString) {
             $blurhash = $source;
         }
@@ -226,6 +271,45 @@ class BlurHashService extends Component
     private function imageToUri($image)
     {   
         return sprintf('data:%s;base64,%s', 'image/png', base64_encode($image));
+    }
+
+    
+
+
+    /**
+     * memoryInfo: Take a Craft CMS asset and return the estimated memory required to load it in to memory, as well as the current memory usage.
+     *
+     * @param asset Asset
+     *
+     * @return string
+     */
+    public function memoryInfo($asset, $infoType = false)
+    {
+
+        // Check it's a valid asset resource
+        if (!$this->validAsset($asset)) {
+            return null;
+        }
+
+        // Check we've recieved a valid info type
+        if (!$infoType || !in_array($infoType, BlurHash::getInstance()->getSettings()->allowedInfoTypes)) {
+            $infoType = BlurHash::getInstance()->getSettings()->DEFAULT_INFO_TYPE;
+        }
+        
+        $assetSize = @getimagesize($asset->getCopyOfFile()); 
+        if (isset($assetSize['bits'])) {
+            $estMemoryRequired = round(($assetSize[0] * $assetSize[1] * $assetSize['bits'] * (isset($assetSize['channels']) ? $assetSize['channels'] : 3) / 8 + Pow(2, 16)) * 1.65);
+            switch ($infoType) {
+                case "required":
+                    return $estMemoryRequired;
+                    break;
+                case "usage":
+                    return memory_get_usage();
+                    break;
+            }
+        } else {
+            return null;
+        }
     }
     
 }

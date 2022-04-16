@@ -105,6 +105,15 @@ BlurHash strings contain the average color for the image. You can decode this va
 {{ averageColor(testAsset).getRgb() }}
 ```
 
+#### Returning memory info
+
+Images need to be loaded in to memory in order to be read, and a blurhash generated. This helper function will tell you approximately how much memory (in bytes) will be needed for a given image. You can also return the current memory usage.
+
+```twig
+{{ testAsset|memoryInfo }}
+{{ testAsset|memoryInfo('usage') }}
+```
+
 ### GraphQL Support
 
 As of v1.1.0 it's possible to use the plugin via Graph QL. The same functionality that's available with the Twig functions, is now available through Graph QL directives.
@@ -219,3 +228,9 @@ Which will return you some JSON like this:
 
 This package is [Treeware](https://treeware.earth). If you use it in production, then we ask that you [**buy the world a tree**](https://plant.treeware.earth/dodecastudio/craft-blurhash/).  
 And why not? By contributing to the Treeware forest you’ll be creating employment for local families and restoring wildlife habitats.
+
+### Thanks! 🙌
+
+Shout-out to [@olsp](https://github.com/olsp) for buying 100 trees.
+
+If you've purchased trees through Ecologi, as part of the Treeware license, please let us know for a shout-out.
