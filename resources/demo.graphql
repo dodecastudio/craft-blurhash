@@ -1,0 +1,10 @@
+# Example query for asset ID 1
+query assetQuery {
+  asset(id: 1) {
+    filename
+    requiredMemory: url @memoryInfo
+    blurhashString: url @assetToBlurHash(asUri: false)
+    blurhashUri: url @assetToBlurHash
+    averageColor: url @averageColor
+  }
+}
