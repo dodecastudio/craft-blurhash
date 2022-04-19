@@ -1,5 +1,9 @@
 # BlurHash Changelog
 
+## 1.2.4 - 2022-04-19
+
+- Hotfix for previously introduced error.
+
 ## 1.2.3 - 2022-04-16
 
 - Adds file checking to prevent errors if a file has been removed from disk but not from Craft DB (Thanks to [@mokopan](https://github.com/dodecastudio/craft-blurhash/issues/8) for the suggestion 🙌).
