@@ -223,6 +223,10 @@ Which will return you some JSON like this:
 }
 ```
 
+#### Settings
+
+Default settings can be overridden. Please see the `config.php` file for details.
+
 ## Licence 🌳
 
 This package is [Treeware](https://treeware.earth). If you use it in production, then we ask that you [**buy the world a tree**](https://plant.treeware.earth/dodecastudio/craft-blurhash/).  

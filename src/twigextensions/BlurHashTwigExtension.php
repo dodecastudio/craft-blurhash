@@ -117,10 +117,11 @@ class BlurHashTwigExtension extends AbstractExtension
      * memoryInfo: Return some information about memory usage.
      *
      * @param asset Asset
+     * @param infoType String
      *
      * @return string
      */
-    public function memoryInfo($asset, $infoType = false) {
+    public function memoryInfo($asset, $infoType = '') {
         return BlurHash::getInstance()->blurHashServices->memoryInfo($asset, $infoType);
     }
 }
