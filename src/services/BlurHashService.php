@@ -24,6 +24,9 @@ use kornrunner\Blurhash\Base83;
 class BlurHashService extends Component
 {
 
+    private $allowedInfoTypes = ['required', 'usage'];
+    private $DEFAULT_INFO_TYPE = 'required';
+
     /**
      * blurhash: Take a Craft CMS asset and return a data URI string.
      *
@@ -106,7 +109,7 @@ class BlurHashService extends Component
         }
 
         // Set size of copied / sampled image
-        $sampleSize = 64;
+        $sampleSize = BlurHash::getInstance()->getSettings()->sampleMaxImageSize;
 
         // Set unique cacheKey
         $cacheKey = 'blurhashstring-' . $asset->id . $asset->dateModified->format('YmdHis') . $sampleSize;
@@ -117,9 +120,13 @@ class BlurHashService extends Component
             return $cachedValue;
             
         } else {
-            $thumbnailImage = imagecreatetruecolor($sampleSize, $sampleSize);
+
+            $sampleImageWidth = round($sampleSize * ($asset->width > $asset->height ? 1 : $asset->width / $asset->height));
+            $sampleImageHeight = round($sampleSize * ($asset->height > $asset->width ? 1 : $asset->height / $asset->width));
+
+            $thumbnailImage = imagecreatetruecolor($sampleImageWidth, $sampleImageHeight);
             $sourceImage = imagecreatefromstring($asset->getContents());
-            imagecopyresized($thumbnailImage, $sourceImage, 0, 0, 0, 0, $sampleSize, $sampleSize, $asset->width, $asset->height);
+            imagecopyresized($thumbnailImage, $sourceImage, 0, 0, 0, 0, $sampleImageWidth, $sampleImageHeight, $asset->width, $asset->height);
             $width = imagesx($thumbnailImage);
             $height = imagesy($thumbnailImage);
             
@@ -165,11 +172,11 @@ class BlurHashService extends Component
 
         // Make sure it is an asset object
         if ($asset !== false && $asset instanceof Asset) {
-            $blurredImageWidth = round(BlurHash::getInstance()->getSettings()->blurredImageWidth * ($asset->width > $asset->height ? 1 : $asset->width / $asset->height));
-            $blurredImageHeight = round(BlurHash::getInstance()->getSettings()->blurredImageHeight * ($asset->height > $asset->width ? 1 : $asset->height / $asset->width));
+            $blurredImageWidth = round(BlurHash::getInstance()->getSettings()->blurredMaxImageSize * ($asset->width > $asset->height ? 1 : $asset->width / $asset->height));
+            $blurredImageHeight = round(BlurHash::getInstance()->getSettings()->blurredMaxImageSize * ($asset->height > $asset->width ? 1 : $asset->height / $asset->width));
         } else {
-            $blurredImageWidth = BlurHash::getInstance()->getSettings()->blurredImageWidth;
-            $blurredImageHeight = BlurHash::getInstance()->getSettings()->blurredImageHeight;
+            $blurredImageWidth = BlurHash::getInstance()->getSettings()->blurredMaxImageSize;
+            $blurredImageHeight = BlurHash::getInstance()->getSettings()->blurredMaxImageSize;
         }
         
         // Set unique cacheKey
@@ -236,7 +243,7 @@ class BlurHashService extends Component
 
         // Attempt to decode as means of validation
         try {
-            $pixels = KornRunnerBlurhash::decode($blurhash, BlurHash::getInstance()->getSettings()->blurredImageWidth, BlurHash::getInstance()->getSettings()->blurredImageHeight);
+            $pixels = KornRunnerBlurhash::decode($blurhash, BlurHash::getInstance()->getSettings()->blurredMaxImageSize, BlurHash::getInstance()->getSettings()->blurredMaxImageSize);
         } catch (KornRunnerBlurhash $e) {
             Craft::error('An error occured trying to decode the BlurHash string: ' . $e->getMessage(), __METHOD__);
             return null;
@@ -272,7 +279,7 @@ class BlurHashService extends Component
      *
      * @return string
      */
-    public function memoryInfo($asset, $infoType = false)
+    public function memoryInfo($asset, $infoType = '')
     {
 
         // Check it's a valid asset resource
@@ -281,8 +288,8 @@ class BlurHashService extends Component
         }
 
         // Check we've recieved a valid info type
-        if (!$infoType || !in_array($infoType, BlurHash::getInstance()->getSettings()->allowedInfoTypes)) {
-            $infoType = BlurHash::getInstance()->getSettings()->DEFAULT_INFO_TYPE;
+        if (!in_array($infoType, $this->allowedInfoTypes)) {
+            $infoType = $this->DEFAULT_INFO_TYPE;
         }
         
         $assetSize = @getimagesize($asset->getCopyOfFile()); 

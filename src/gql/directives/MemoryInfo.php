@@ -15,7 +15,7 @@ use GraphQL\Type\Definition\Type;
 
 class MemoryInfo extends Directive
 {
-    const DEFAULT_AS_URI = true;
+    private static $DEFAULT_INFO_TYPE = 'required';
 
     public static function create(): GqlDirective
     {
@@ -33,7 +33,7 @@ class MemoryInfo extends Directive
                 new FieldArgument([
                     'name' => 'infoType',
                     'type' => Type::string(),
-                    'defaultValue' => BlurHash::getInstance()->getSettings()->DEFAULT_INFO_TYPE,
+                    'defaultValue' => self::$DEFAULT_INFO_TYPE,
                     'description' => 'The information you would like to return (supports either \'required\' or \'usage\').',
                 ]),
             ],
@@ -49,7 +49,7 @@ class MemoryInfo extends Directive
 
     public static function apply(mixed $source, mixed $value, array $arguments, ResolveInfo $resolveInfo): mixed
     {
-        $infoType = $arguments['infoType'] ?? BlurHash::getInstance()->getSettings()->DEFAULT_INFO_TYPE;
+        $infoType = $arguments['infoType'] ?? self::$DEFAULT_INFO_TYPE;
       return BlurHash::getInstance()->blurHashServices->memoryInfo($source, $infoType);
     }
 }

@@ -1,5 +1,9 @@
 # BlurHash Changelog
 
+## 2.0.1 - 2022-05-16
+
+- Added settings config. See the `config.php` file for details.
+
 ## 2.0.0-beta.3 - 2022-04-16
 
 - Adds file checking to prevent errors if a file has been removed from disk but not from Craft DB (Thanks to [@mokopan](https://github.com/dodecastudio/craft-blurhash/issues/8) for the suggestion 🙌).
