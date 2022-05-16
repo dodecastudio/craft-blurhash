@@ -1,5 +1,9 @@
 # BlurHash Changelog
 
+## 1.2.5 - 2022-05-16
+
+- Added settings config. See the `config.php` file for details.
+
 ## 1.2.4 - 2022-04-19
 
 - Hotfix for previously introduced error.
