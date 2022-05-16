@@ -223,7 +223,7 @@ Which will return you some JSON like this:
 }
 ```
 
-#### Settings
+## Settings
 
 Default settings can be overridden. Please see the `config.php` file for details.
 
