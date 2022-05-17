@@ -30,7 +30,7 @@ use yii\base\Event;
  * 
  * @author    Dodeca Studio
  * @package   BlurHash
- * @since     1.0.1
+ * @since     2.0.0
  *
  */
 class BlurHash extends Plugin
