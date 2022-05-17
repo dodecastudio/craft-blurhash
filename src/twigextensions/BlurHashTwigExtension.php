@@ -1,6 +1,6 @@
 <?php
 /**
- * BlurHash plugin for Craft CMS 3.x
+ * BlurHash plugin for Craft CMS 4.x
  *
  * Render a BlurHash from a given image.
  *
