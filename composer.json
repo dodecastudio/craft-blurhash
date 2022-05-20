@@ -3,6 +3,7 @@
   "description": "Render a BlurHash from a given image.",
   "type": "craft-plugin",
   "version": "2.0.1",
+  "license": "proprietary",
   "keywords": [
     "craft",
     "cms",
