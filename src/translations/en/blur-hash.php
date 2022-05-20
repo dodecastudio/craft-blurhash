@@ -9,7 +9,7 @@
  */
 
 /**
- * BlurHash en Translation
+ * BlurHash Translations
  *
  * @author    Dodeca Studio
  * @package   BlurHash
