@@ -40,6 +40,9 @@
     "developerUrl": "https://dodeca.studio",
     "documentationUrl": "https://github.com/dodecastudio/craft-blurhash/blob/main/README.md",
     "changelogUrl": "https://github.com/dodecastudio/craft-blurhash/blob/main/CHANGELOG.md",
-    "class": "dodecastudio\\blurhash\\BlurHash"
+    "class": "dodecastudio\\blurhash\\BlurHash",
+    "components": {
+      "services": "dodecastudio\\blurhash\\services\\BlurHashService"
+    }
   }
 }
