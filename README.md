@@ -225,7 +225,7 @@ Which will return you some JSON like this:
 
 ## Settings
 
-Default settings can be overridden. Please see the `config.php` file for details.
+Default settings can be overridden. Please see the `blurhash-config.php` file for details.
 
 ## Licence 🌳
 
