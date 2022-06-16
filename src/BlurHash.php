@@ -43,23 +43,6 @@ class BlurHash extends Plugin
      */
     public static $plugin;
 
-    // Public Properties
-
-    /**
-     * @var string
-     */
-    public string $schemaVersion = '1.0.0';
-
-    /**
-     * @var bool
-     */
-    public bool $hasCpSettings = false;
-
-    /**
-     * @var bool
-     */
-    public bool $hasCpSection = false;
-
     // Public Methods
 
     public function init()

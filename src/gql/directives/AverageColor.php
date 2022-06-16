@@ -38,7 +38,7 @@ class AverageColor extends Directive
         return 'averageColor';
     }
 
-    public static function apply(mixed $source, mixed $value, array $arguments, ResolveInfo $resolveInfo): mixed
+    public static function apply($source, $value, array $arguments, ResolveInfo $resolveInfo): string
     {
         if ($source instanceof Asset && $source->kind === 'image') {
             return BlurHash::getInstance()->blurHashServices->averageColor($source);

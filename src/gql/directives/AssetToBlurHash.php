@@ -47,7 +47,7 @@ class AssetToBlurHash extends Directive
         return 'assetToBlurHash';
     }
 
-    public static function apply(mixed $source, mixed $value, array $arguments, ResolveInfo $resolveInfo): mixed
+    public static function apply($source, $value, array $arguments, ResolveInfo $resolveInfo): string
     {
         $asUri = $arguments['asUri'] ?? self::DEFAULT_AS_URI;
 

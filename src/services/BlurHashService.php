@@ -84,8 +84,15 @@ class BlurHashService extends Component
         }
 
         // Check file exists
-        if(!$asset->getFs()->fileExists($asset->path)) {
-            return false;
+        if (method_exists($asset, 'getFs')) {
+            if ( !$asset->getFs()->fileExists($asset->path) ) {
+                return false;
+            }
+        }
+        if (method_exists($asset, 'getVolume')) {
+            if ( !$asset->getVolume()->fileExists($asset->path) ) {
+                return false;
+            }
         }
 
         return true;
@@ -284,7 +291,7 @@ class BlurHashService extends Component
 
         // Check it's a valid asset resource
         if (!$this->validAsset($asset)) {
-            return $default;
+            return 'unknown';
         }
 
         // Check we've recieved a valid info type
@@ -297,14 +304,14 @@ class BlurHashService extends Component
             $estMemoryRequired = round(($assetSize[0] * $assetSize[1] * $assetSize['bits'] * (isset($assetSize['channels']) ? $assetSize['channels'] : 3) / 8 + Pow(2, 16)) * 1.65);
             switch ($infoType) {
                 case "required":
-                    return $estMemoryRequired;
+                    return strval($estMemoryRequired);
                     break;
                 case "usage":
                     return memory_get_usage();
                     break;
             }
         } else {
-            return $default;
+            return 'unknown';
         }
     }
     

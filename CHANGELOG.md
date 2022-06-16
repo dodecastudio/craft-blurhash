@@ -1,5 +1,9 @@
 # BlurHash Changelog
 
+## 2.0.2 - 2022-06-16
+
+- Updated: Composer.json file to better support Craft 3 and 4 across a single version.
+
 ## 2.0.1 - 2022-05-16
 
 - Added settings config. See the `config.php` file for details.

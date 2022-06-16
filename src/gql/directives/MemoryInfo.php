@@ -47,9 +47,9 @@ class MemoryInfo extends Directive
         return 'memoryInfo';
     }
 
-    public static function apply(mixed $source, mixed $value, array $arguments, ResolveInfo $resolveInfo): mixed
+    public static function apply($source, $value, array $arguments, ResolveInfo $resolveInfo): string
     {
         $infoType = $arguments['infoType'] ?? self::$DEFAULT_INFO_TYPE;
-      return BlurHash::getInstance()->blurHashServices->memoryInfo($source, $infoType);
+        return BlurHash::getInstance()->blurHashServices->memoryInfo($source, $infoType);
     }
 }
