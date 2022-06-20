@@ -1,5 +1,10 @@
 # BlurHash Changelog
 
+## 2.0.3 - 2022-06-20
+
+- Updated: Added more filetypes to the supported filetypes list (was being a little overly cautious previously).
+- Fixed: Incorrect variable value being returned by Graph QL query, fixes #15.
+
 ## 2.0.2 - 2022-06-16
 
 - Updated: Composer.json file to better support Craft 3 and 4 across a single version.
