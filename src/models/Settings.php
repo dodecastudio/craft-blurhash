@@ -14,7 +14,7 @@ class Settings extends Model
     public $sampleMaxImageSize = 64;
 
     // Allowed image types.
-    public $allowedFileTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    public $allowedFileTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/tiff'];
 
     public function rules(): array
     {

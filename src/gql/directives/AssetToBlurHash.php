@@ -56,7 +56,7 @@ class AssetToBlurHash extends Directive
         }
 
         if ($source->kind !== 'image' || !in_array($source->mimeType, BlurHash::getInstance()->getSettings()->allowedFileTypes)) {
-            return null;
+            return 'Unsupported filetype';
         }
 
         try {
