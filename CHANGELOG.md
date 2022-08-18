@@ -1,5 +1,9 @@
 # BlurHash Changelog
 
+## 2.0.4 - 2022-08-18
+
+- Updated: Added caching to average color functionality.
+
 ## 2.0.3 - 2022-06-20
 
 - Updated: Added more filetypes to the supported filetypes list (was being a little overly cautious previously).

@@ -251,21 +251,34 @@ class BlurHashService extends Component
         if ($isString) {
             $blurhash = $source;
         }
+        
+        // Set unique cacheKey
+        $cacheKey = 'blurhashavereagecolor-' . $blurhash;
+        $cachedValue = \Craft::$app->cache->get($cacheKey);
 
-        // Attempt to decode as means of validation
-        try {
-            $pixels = KornRunnerBlurhash::decode($blurhash, BlurHash::getInstance()->getSettings()->blurredMaxImageSize, BlurHash::getInstance()->getSettings()->blurredMaxImageSize);
-        } catch (KornRunnerBlurhash $e) {
-            Craft::error('An error occured trying to decode the BlurHash string: ' . $e->getMessage(), __METHOD__);
-            return null;
+        // Check for cached value
+        if ($cachedValue) {
+            return new ColorData($cachedValue);
+            
+        } else {
+            // Attempt to decode as means of validation
+            try {
+                $pixels = KornRunnerBlurhash::decode($blurhash, BlurHash::getInstance()->getSettings()->blurredMaxImageSize, BlurHash::getInstance()->getSettings()->blurredMaxImageSize);
+            } catch (KornRunnerBlurhash $e) {
+                Craft::error('An error occured trying to decode the BlurHash string: ' . $e->getMessage(), __METHOD__);
+                return null;
+            }
+
+            $averageColor = substr($blurhash, 2, 4);
+            $srgb = Base83::decode($averageColor);
+            $hex = "#" . dechex($srgb);
+
+            $value = ColorValidator::normalizeColor($hex);
+            \Craft::$app->cache->set($cacheKey, $value, 60 * 60 * 24 * 7 * 4); // Cache for approx 1 month
+            
+            return new ColorData($value);
         }
 
-        $averageColor = substr($blurhash, 2, 4);
-        $srgb = Base83::decode($averageColor);
-        $hex = "#" . dechex($srgb);
-
-        $value = ColorValidator::normalizeColor($hex);
-        return new ColorData($value);
     }
 
 
