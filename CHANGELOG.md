@@ -1,5 +1,9 @@
 # BlurHash Changelog
 
+## 2.0.5 - 2023-08-04
+
+- Fixed: Ensure component count is rounded up to prevent zero being returned, fixes #18.
+
 ## 2.0.4 - 2022-08-18
 
 - Updated: Added caching to average color functionality.
