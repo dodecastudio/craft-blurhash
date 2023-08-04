@@ -157,8 +157,8 @@ class BlurHashService extends Component
             imagedestroy($thumbnailImage);
 
             // Generate a blurhash from the image data.
-            $components_x = $asset->width > $asset->height ? 6 : round(6 * ($asset->width / $asset->height));
-            $components_y = $asset->width < $asset->height ? 6 : round(6 * ($asset->height / $asset->width));
+            $components_x = $asset->width > $asset->height ? 6 : ceil(6 * ($asset->width / $asset->height));
+            $components_y = $asset->width < $asset->height ? 6 : ceil(6 * ($asset->height / $asset->width));
             $blurhash = KornRunnerBlurhash::encode($pixels, $components_x, $components_y);
             \Craft::$app->cache->set($cacheKey, $blurhash, 60 * 60 * 24 * 7 * 4); // Cache for approx 1 month
             return $blurhash;
