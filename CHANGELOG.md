@@ -1,5 +1,9 @@
 # BlurHash Changelog
 
+## 3.0.0 - 2024-04-22
+
+- Updated: Added support for Craft 5.
+
 ## 2.0.5 - 2023-08-04
 
 - Fixed: Ensure component count is rounded up to prevent zero being returned, fixes #18.
