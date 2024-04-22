@@ -2,7 +2,7 @@
   "name": "dodecastudio/craft-blurhash",
   "description": "Render a BlurHash from a given image.",
   "type": "craft-plugin",
-  "version": "2.0.5",
+  "version": "3.0.0",
   "license": "proprietary",
   "keywords": [
     "craft",
@@ -24,7 +24,7 @@
   ],
   "require": {
     "php": ">=7.4",
-    "craftcms/cms": "^3.0|^4.0",
+    "craftcms/cms": "^3.0|^4.0|^5.0",
     "kornrunner/blurhash": "^1.2",
     "treeware/plant": "^0.1.0"
   },
