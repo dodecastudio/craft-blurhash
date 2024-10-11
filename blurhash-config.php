@@ -1,6 +1,6 @@
 <?php
 /**
- * BlurHash plugin for Craft CMS 4.x
+ * BlurHash plugin for Craft CMS
  *
  * Render a BlurHash from a given image.
  *
@@ -44,4 +44,9 @@ return [
    * @var array An array of bitmap mime-types allowed by blurhash. 
    */
   'allowedFileTypes' => ['image/jpeg', 'image/png', 'image/webp'],
+  
+  /**
+   * @var bool Whether or not to check that the asset file exists when rendering the blurhash.
+   */
+  'checkFileExists' => true,
 ];

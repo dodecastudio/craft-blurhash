@@ -2,7 +2,7 @@
   "name": "dodecastudio/craft-blurhash",
   "description": "Render a BlurHash from a given image.",
   "type": "craft-plugin",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "license": "proprietary",
   "keywords": [
     "craft",

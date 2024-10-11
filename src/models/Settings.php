@@ -16,12 +16,16 @@ class Settings extends Model
     // Allowed image types.
     public $allowedFileTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/tiff', 'image/bmp', 'image/gif'];
 
+    // Whether or not to check that the asset is valid.
+    public $checkFileExists = true;
+
     public function rules(): array
     {
         return [
             ['blurredMaxImageSize', 'required'],
             ['sampleMaxImageSize', 'required'],
             ['allowedFileTypes', 'required'],
+            ['checkFileExists', 'required'],
         ];
     }
 }

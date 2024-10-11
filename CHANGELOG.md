@@ -1,5 +1,9 @@
 # BlurHash Changelog
 
+## 3.0.1 - 2024-10-11
+
+- Added: Config setting `checkFileExists`. If this is set to `false`, then the plugin will not check that the asset file exists before executing. Caution: may lead to unexpected results. Can hopefully assist with [#22](https://github.com/dodecastudio/craft-blurhash/issues/22).
+
 ## 3.0.0 - 2024-04-22
 
 - Updated: Added support for Craft 5.
