@@ -1,5 +1,9 @@
 # BlurHash Changelog
 
+## 3.0.2 - 2024-11-18
+
+- Fixed: Issue with the cache key when `dateModified` is not set for an asset. Thanks for [@jorisnoo](https://github.com/jorisnoo) for finding and fixing this bug.
+
 ## 3.0.1 - 2024-10-11
 
 - Added: Config setting `checkFileExists`. If this is set to `false`, then the plugin will not check that the asset file exists before executing. Caution: may lead to unexpected results. Can hopefully assist with [#22](https://github.com/dodecastudio/craft-blurhash/issues/22).
