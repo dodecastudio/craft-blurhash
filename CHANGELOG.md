@@ -1,5 +1,9 @@
 # BlurHash Changelog
 
+## 3.0.3 - 2024-12-10
+
+- Updated: Further simplified checking whether a file exists or not, removing superfluous code. Related to [#22](https://github.com/dodecastudio/craft-blurhash/issues/22).
+
 ## 3.0.2 - 2024-11-18
 
 - Fixed: Issue with the cache key when `dateModified` is not set for an asset. Thanks for [@jorisnoo](https://github.com/jorisnoo) for finding and fixing this bug.

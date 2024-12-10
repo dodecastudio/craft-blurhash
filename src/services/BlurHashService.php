@@ -87,13 +87,6 @@ class BlurHashService extends Component
         if (BlurHash::getInstance()->getSettings()->checkFileExists) {
 
             // Check file exists
-            if (method_exists($asset, 'getFs')) {
-                if (method_exists($asset->getFs(), 'fileExists')) {
-                    if ( !$asset->getFs()->fileExists($asset->path) ) {
-                        return false;
-                    }
-                }
-            }
             if (method_exists($asset, 'getVolume')) {
                 if (method_exists($asset->getVolume(), 'fileExists')) {
                     if ( !$asset->getVolume()->fileExists($asset->path) ) {
