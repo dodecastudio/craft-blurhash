@@ -1,5 +1,10 @@
 # BlurHash Changelog
 
+## 3.0.4 - 2025-03-20
+
+- Updated: Added support for HEIC images. Fixes [#24](https://github.com/dodecastudio/craft-blurhash/issues/24) - thanks to @VincentSmackIt for raising.
+- Fixed: Minor change to some syntax introduced in 3.0.2 to better support older versions of PHP.
+
 ## 3.0.3 - 2024-12-10
 
 - Updated: Further simplified checking whether a file exists or not, removing superfluous code. Related to [#22](https://github.com/dodecastudio/craft-blurhash/issues/22).

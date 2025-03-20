@@ -14,7 +14,7 @@ class Settings extends Model
     public $sampleMaxImageSize = 64;
 
     // Allowed image types.
-    public $allowedFileTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/tiff', 'image/bmp', 'image/gif'];
+    public $allowedFileTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/tiff', 'image/bmp', 'image/gif', 'image/avif', 'image/heic'];
 
     // Whether or not to check that the asset is valid.
     public $checkFileExists = true;

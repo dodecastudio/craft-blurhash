@@ -43,7 +43,7 @@ return [
   /**
    * @var array An array of bitmap mime-types allowed by blurhash. 
    */
-  'allowedFileTypes' => ['image/jpeg', 'image/png', 'image/webp'],
+  'allowedFileTypes' => ['image/jpeg', 'image/png', 'image/webp', 'image/tiff', 'image/bmp', 'image/gif', 'image/avif', 'image/heic'],
   
   /**
    * @var bool Whether or not to check that the asset file exists when rendering the blurhash.
