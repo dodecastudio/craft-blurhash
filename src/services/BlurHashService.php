@@ -121,7 +121,7 @@ class BlurHashService extends Component
         $sampleSize = BlurHash::getInstance()->getSettings()->sampleMaxImageSize;
 
         // Set unique cacheKey
-        $dateModified= $asset->dateModified?->format('YmdHis') ?? $asset->dateUpdated?->format('YmdHis') ?? '';
+        $dateModified= $asset->dateModified->format('YmdHis') ?? $asset->dateUpdated->format('YmdHis') ?? '';
         $cacheKey = 'blurhashstring-' . $asset->id . $dateModified . $sampleSize;
         $cachedValue = \Craft::$app->cache->get($cacheKey);
 
@@ -134,8 +134,18 @@ class BlurHashService extends Component
             $sampleImageWidth = round($sampleSize * ($asset->width > $asset->height ? 1 : $asset->width / $asset->height));
             $sampleImageHeight = round($sampleSize * ($asset->height > $asset->width ? 1 : $asset->height / $asset->width));
 
-            $thumbnailImage = imagecreatetruecolor($sampleImageWidth, $sampleImageHeight);
-            $sourceImage = imagecreatefromstring($asset->getContents());
+            $thumbnailImage = imagecreatetruecolor($sampleImageWidth, $sampleImageHeight); 
+
+            $assetContents = $asset->getContents();
+            if ($asset->getExtension() === 'heic') {
+                $imagick = new \Imagick();
+                $imagick->readImageBlob($assetContents);
+                $imagick->setImageFormat('png');
+                $assetContents = $imagick->getImageBlob();
+            }
+
+            $sourceImage = imagecreatefromstring($assetContents);
+            
             imagecopyresized($thumbnailImage, $sourceImage, 0, 0, 0, 0, $sampleImageWidth, $sampleImageHeight, $asset->width, $asset->height);
             $width = imagesx($thumbnailImage);
             $height = imagesy($thumbnailImage);
