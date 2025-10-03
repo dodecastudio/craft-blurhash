@@ -1,5 +1,10 @@
 # BlurHash Changelog
 
+## 3.0.5 - 2025-10-03
+
+- Updated: Added new `defaultAverageColor` config setting, which will be returned if an average color cannot be determined from an asset or blurhash string.
+- Fixed: A bug whereby the `@averageColor` GraphQL directive would produce an error when supplied with an unsupported asset. Fixes [#27](https://github.com/dodecastudio/craft-blurhash/,issues/27), thanks to [@plcdnl](https://github.com/plcdnl) and [@jbach](https://github.com/jbach) for raising and contributing.
+
 ## 3.0.4 - 2025-03-20
 
 - Updated: Added support for HEIC images. Fixes [#24](https://github.com/dodecastudio/craft-blurhash/issues/24) - thanks to @VincentSmackIt for raising.

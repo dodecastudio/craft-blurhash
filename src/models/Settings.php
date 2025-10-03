@@ -19,6 +19,9 @@ class Settings extends Model
     // Whether or not to check that the asset is valid.
     public $checkFileExists = true;
 
+    // Default average color to return if one cannot be determined.
+    public $defaultAverageColor = '#000000';
+
     public function rules(): array
     {
         return [

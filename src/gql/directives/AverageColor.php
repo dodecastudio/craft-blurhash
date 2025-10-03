@@ -40,7 +40,7 @@ class AverageColor extends Directive
 
     public static function apply($source, $value, array $arguments, ResolveInfo $resolveInfo): string
     {
-        if ($source instanceof Asset && $source->kind === 'image') {
+        if ($source instanceof Asset) {
             return BlurHash::getInstance()->blurHashServices->averageColor($source);
         }
 

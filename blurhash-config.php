@@ -49,4 +49,9 @@ return [
    * @var bool Whether or not to check that the asset file exists when rendering the blurhash.
    */
   'checkFileExists' => true,
+  
+  /**
+   * @var string A default average color to return if one cannot be determined from the image or blurhash.
+   */
+  'defaultAverageColor' => '#000000',
 ];

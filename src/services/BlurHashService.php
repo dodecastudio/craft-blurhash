@@ -251,7 +251,7 @@ class BlurHashService extends Component
         if ($isAsset) {
             // Check it's valid
             if (!$this->validAsset($source)) {
-                return new ColorData("#000000");
+                return new ColorData(BlurHash::getInstance()->getSettings()->defaultAverageColor);
             }
             $blurhash = $this->blurhashEncode($source);
         }
