@@ -130,6 +130,7 @@ class BlurHashService extends Component
             return $cachedValue;
             
         } else {
+            $typesToTransform = ["image/heic"];
 
             $sampleImageWidth = round($sampleSize * ($asset->width > $asset->height ? 1 : $asset->width / $asset->height));
             $sampleImageHeight = round($sampleSize * ($asset->height > $asset->width ? 1 : $asset->height / $asset->width));
@@ -137,7 +138,8 @@ class BlurHashService extends Component
             $thumbnailImage = imagecreatetruecolor($sampleImageWidth, $sampleImageHeight); 
 
             $assetContents = $asset->getContents();
-            if ($asset->getExtension() === 'heic') {
+            
+            if (in_array($asset->mimeType, $typesToTransform)) {
                 $imagick = new \Imagick();
                 $imagick->readImageBlob($assetContents);
                 $imagick->setImageFormat('png');
