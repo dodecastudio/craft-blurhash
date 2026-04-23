@@ -121,7 +121,7 @@ class BlurHashService extends Component
         $sampleSize = BlurHash::getInstance()->getSettings()->sampleMaxImageSize;
 
         // Set unique cacheKey
-        $dateModified= $asset->dateModified->format('YmdHis') ?? $asset->dateUpdated->format('YmdHis') ?? '';
+        $dateModified = $asset->dateModified->format('YmdHis') ?? $asset->dateUpdated->format('YmdHis') ?? '';
         $cacheKey = 'blurhashstring-' . $asset->id . $dateModified . $sampleSize;
         $cachedValue = \Craft::$app->cache->get($cacheKey);
 
@@ -131,8 +131,8 @@ class BlurHashService extends Component
             
         } else {
 
-            $sampleImageWidth = round($sampleSize * ($asset->width > $asset->height ? 1 : $asset->width / $asset->height));
-            $sampleImageHeight = round($sampleSize * ($asset->height > $asset->width ? 1 : $asset->height / $asset->width));
+            $sampleImageWidth = (int)round($sampleSize * ($asset->width > $asset->height ? 1 : $asset->width / $asset->height));
+            $sampleImageHeight = (int)round($sampleSize * ($asset->height > $asset->width ? 1 : $asset->height / $asset->width));
 
             $thumbnailImage = imagecreatetruecolor($sampleImageWidth, $sampleImageHeight); 
 
@@ -146,7 +146,11 @@ class BlurHashService extends Component
 
             $sourceImage = imagecreatefromstring($assetContents);
             
-            imagecopyresized($thumbnailImage, $sourceImage, 0, 0, 0, 0, $sampleImageWidth, $sampleImageHeight, $asset->width, $asset->height);
+            imagecopyresampled($thumbnailImage, $sourceImage, 0, 0, 0, 0, $sampleImageWidth, $sampleImageHeight, $asset->width, $asset->height);
+            
+            // Clean up source image immediately to free memory
+            imagedestroy($sourceImage);
+
             $width = imagesx($thumbnailImage);
             $height = imagesy($thumbnailImage);
             
@@ -155,10 +159,12 @@ class BlurHashService extends Component
             for ($y = 0; $y < $height; ++$y) {
                 $row = [];
                 for ($x = 0; $x < $width; ++$x) {
-                    $index = imagecolorat($thumbnailImage, $x, $y);
-                    $colors = imagecolorsforindex($thumbnailImage, $index);
-
-                    $row[] = [$colors['red'], $colors['green'], $colors['blue']];
+                    $rgb = imagecolorat($thumbnailImage, $x, $y);
+                    $row[] = [
+                        ($rgb >> 16) & 0xFF,
+                        ($rgb >> 8) & 0xFF,
+                        $rgb & 0xFF
+                    ];
                 }
                 $pixels[] = $row;
             }
@@ -166,10 +172,12 @@ class BlurHashService extends Component
             imagedestroy($thumbnailImage);
 
             // Generate a blurhash from the image data.
-            $components_x = $asset->width > $asset->height ? 6 : ceil(6 * ($asset->width / $asset->height));
-            $components_y = $asset->width < $asset->height ? 6 : ceil(6 * ($asset->height / $asset->width));
+            $components_x = (int)($asset->width > $asset->height ? 6 : ceil(6 * ($asset->width / $asset->height)));
+            $components_y = (int)($asset->width < $asset->height ? 6 : ceil(6 * ($asset->height / $asset->width)));
+            
             $blurhash = KornRunnerBlurhash::encode($pixels, $components_x, $components_y);
             \Craft::$app->cache->set($cacheKey, $blurhash, 60 * 60 * 24 * 7 * 4); // Cache for approx 1 month
+            
             return $blurhash;
         }
 
@@ -189,14 +197,15 @@ class BlurHashService extends Component
         if (!is_string($blurhash)) {
             return false;
         }
+        $sampleSize = BlurHash::getInstance()->getSettings()->blurredMaxImageSize;
 
         // Make sure it is an asset object
-        if ($asset !== false && $asset instanceof Asset) {
-            $blurredImageWidth = round(BlurHash::getInstance()->getSettings()->blurredMaxImageSize * ($asset->width > $asset->height ? 1 : $asset->width / $asset->height));
-            $blurredImageHeight = round(BlurHash::getInstance()->getSettings()->blurredMaxImageSize * ($asset->height > $asset->width ? 1 : $asset->height / $asset->width));
+        if ($asset instanceof Asset) {
+            $blurredImageWidth = round($sampleSize * ($asset->width > $asset->height ? 1 : $asset->width / $asset->height));
+            $blurredImageHeight = round($sampleSize * ($asset->height > $asset->width ? 1 : $asset->height / $asset->width));
         } else {
-            $blurredImageWidth = BlurHash::getInstance()->getSettings()->blurredMaxImageSize;
-            $blurredImageHeight = BlurHash::getInstance()->getSettings()->blurredMaxImageSize;
+            $blurredImageWidth = $sampleSize;
+            $blurredImageHeight = $sampleSize;
         }
         
         // Set unique cacheKey
@@ -206,26 +215,35 @@ class BlurHashService extends Component
         // Check for cached value
         if ($cachedValue) {
             return $cachedValue;
-            
-        } else {
-
-            // Decode the blurhash to an image file.
-            $pixels = KornRunnerBlurhash::decode($blurhash, $blurredImageWidth, $blurredImageHeight);
-            $decodedImage  = imagecreatetruecolor($blurredImageWidth, $blurredImageHeight);
-            for ($y = 0; $y < $blurredImageHeight; ++$y) {
-                for ($x = 0; $x < $blurredImageWidth; ++$x) {
-                    [$r, $g, $b] = $pixels[$y][$x];
-                    imagesetpixel($decodedImage, $x, $y, imagecolorallocate($decodedImage, $r, $g, $b));
-                }
-            }
-
-            // Render the image and return it.
-            ob_start(); 
-            imagepng($decodedImage);
-            $decodedImageData = ob_get_contents();            
-            \Craft::$app->cache->set($cacheKey, $decodedImageData, 60 * 60 * 24 * 7 * 4); // Cache for approx 1 month
-            return ob_get_clean();
         }
+
+        // Decode the blurhash to an image file.
+        $pixels = KornRunnerBlurhash::decode($blurhash, (int)$blurredImageWidth, (int)$blurredImageHeight);
+        $decodedImage = imagecreatetruecolor((int)$blurredImageWidth, (int)$blurredImageHeight);
+
+        // Disable alpha blending for faster raw pixel writing
+        imagealphablending($decodedImage, false);
+
+        for ($y = 0; $y < $blurredImageHeight; ++$y) {
+            for ($x = 0; $x < $blurredImageWidth; ++$x) {
+                [$r, $g, $b] = $pixels[$y][$x];
+                
+                // Use bit-shifting for color calculation
+                $color = ($r << 16) | ($g << 8) | $b;
+                imagesetpixel($decodedImage, $x, $y, $color);
+            }
+        }
+
+        // Render the image and return it.
+        ob_start(); 
+        // Set PNG compression level to 6 (default) but keep PNG for consistency.
+        imagepng($decodedImage);
+        $decodedImageData = ob_get_clean();
+        
+        \Craft::$app->cache->set($cacheKey, $decodedImageData, 60 * 60 * 24 * 7 * 4);
+        
+        imagedestroy($decodedImage); // Clean up memory immediately
+        return $decodedImageData;
 
     }
 
@@ -239,6 +257,7 @@ class BlurHashService extends Component
      */
     public function averageColor($source)
     { 
+
         $isAsset = $source instanceof Asset;
         $isString = is_string($source);
 
@@ -253,9 +272,10 @@ class BlurHashService extends Component
             if (!$this->validAsset($source)) {
                 return new ColorData(BlurHash::getInstance()->getSettings()->defaultAverageColor);
             }
+            // Encode only if necessary
             $blurhash = $this->blurhashEncode($source);
         }
-          
+        
         // If we've just got a string then continue with that
         if ($isString) {
             $blurhash = $source;
@@ -268,26 +288,23 @@ class BlurHashService extends Component
         // Check for cached value
         if ($cachedValue) {
             return new ColorData($cachedValue);
-            
         } else {
-            // Attempt to decode as means of validation
             try {
-                $pixels = KornRunnerBlurhash::decode($blurhash, BlurHash::getInstance()->getSettings()->blurredMaxImageSize, BlurHash::getInstance()->getSettings()->blurredMaxImageSize);
-            } catch (KornRunnerBlurhash $e) {
-                Craft::error('An error occured trying to decode the BlurHash string: ' . $e->getMessage(), __METHOD__);
+                // The average color is encoded in the first few characters of the string
+                $averageColor = substr($blurhash, 2, 4);
+                $srgb = Base83::decode($averageColor);
+                
+                $hex = "#" . str_pad(dechex($srgb), 6, "0", STR_PAD_LEFT);
+
+                $value = ColorValidator::normalizeColor($hex);
+                \Craft::$app->cache->set($cacheKey, $value, 60 * 60 * 24 * 7 * 4); // Cache for approx 1 month
+                
+                return new ColorData($value);
+            } catch (\Exception $e) {
+                Craft::error('An error occurred trying to parse the BlurHash string: ' . $e->getMessage(), __METHOD__);
                 return null;
             }
-
-            $averageColor = substr($blurhash, 2, 4);
-            $srgb = Base83::decode($averageColor);
-            $hex = "#" . dechex($srgb);
-
-            $value = ColorValidator::normalizeColor($hex);
-            \Craft::$app->cache->set($cacheKey, $value, 60 * 60 * 24 * 7 * 4); // Cache for approx 1 month
-            
-            return new ColorData($value);
         }
-
     }
 
 

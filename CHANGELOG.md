@@ -1,5 +1,9 @@
 # BlurHash Changelog
 
+## 3.0.6 - 2026-04-23
+
+- Updated: Made some performance improvements to key functions.
+
 ## 3.0.5 - 2025-10-03
 
 - Updated: Added new `defaultAverageColor` config setting, which will be returned if an average color cannot be determined from an asset or blurhash string.
