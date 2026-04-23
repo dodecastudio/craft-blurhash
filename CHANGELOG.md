@@ -3,6 +3,7 @@
 ## 3.0.6 - 2026-04-23
 
 - Updated: Made some performance improvements to key functions.
+- Fixed: Mimetype check update. Thanks to [@ishetnogferre](https://github.com/dodecastudio/craft-blurhash/pull/28) for contributing.
 
 ## 3.0.5 - 2025-10-03
 
