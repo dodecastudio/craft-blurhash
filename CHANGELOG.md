@@ -1,12 +1,13 @@
 # BlurHash Changelog
 
-## 3.0.7 - 2026-11-20
+## 3.1.0 - 2026-11-20
 
 - Fixed: Cached blurhashes and average colors are now returned _without_ first checking the asset's file exists. On remote volumes (S3, Servd etc) that check was a network request per asset on every page load, and `averageColor` made it twice, so pages showing many images could take longer to render.
 - Fixed: `averageColor` could try to read an average color from an invalid blurhash when the asset's file was missing. It now returns `defaultAverageColor`.
 - Fixed: Ensure `imagedestroy()` is only used for PHP 7.X, as it's deprecated in PHP 8.
 - Fixed: Images that can't be read (corrupt files, unsupported formats or a failed download) no longer cause an error. The error is logged and `false` or `defaultAverageColor` is returned instead.
 - Fixed: TIFF images are now converted with Imagick before encoding, as GD can't read them. If Imagick isn't installed, TIFF and HEIC images are skipped and an error is logged.
+- Fixed: Issue with the cache key when `dateModified` is not set for an asset, which had returned in 3.0.4. It now falls back to `dateUpdated` while still supporting older versions of PHP.
 
 ## 3.0.6 - 2026-04-23
 

@@ -139,7 +139,8 @@ class BlurHashService extends Component
         $sampleSize = BlurHash::getInstance()->getSettings()->sampleMaxImageSize;
 
         // Set unique cacheKey
-        $dateModified = $asset->dateModified->format('YmdHis') ?? $asset->dateUpdated->format('YmdHis') ?? '';
+        $date = $asset->dateModified ?? $asset->dateUpdated;
+        $dateModified = $date ? $date->format('YmdHis') : '';
         $cacheKey = 'blurhashstring-' . $asset->id . $dateModified . $sampleSize;
         $cachedValue = \Craft::$app->cache->get($cacheKey);
 
