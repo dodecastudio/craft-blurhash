@@ -153,57 +153,75 @@ class BlurHashService extends Component
                 return false;
             }
 
-            $typesToTransform = ["image/heic"];
+            $typesToTransform = ["image/heic", "image/tiff"];
+            $sourceImage = null;
+            $thumbnailImage = null;
 
-            $sampleImageWidth = (int)round($sampleSize * ($asset->width > $asset->height ? 1 : $asset->width / $asset->height));
-            $sampleImageHeight = (int)round($sampleSize * ($asset->height > $asset->width ? 1 : $asset->height / $asset->width));
+            try {
+                $sampleImageWidth = (int)round($sampleSize * ($asset->width > $asset->height ? 1 : $asset->width / $asset->height));
+                $sampleImageHeight = (int)round($sampleSize * ($asset->height > $asset->width ? 1 : $asset->height / $asset->width));
 
-            $thumbnailImage = imagecreatetruecolor($sampleImageWidth, $sampleImageHeight); 
+                $thumbnailImage = imagecreatetruecolor($sampleImageWidth, $sampleImageHeight);
 
-            $assetContents = $asset->getContents();
-            
-            if (in_array($asset->mimeType, $typesToTransform)) {
-                $imagick = new \Imagick();
-                $imagick->readImageBlob($assetContents);
-                $imagick->setImageFormat('png');
-                $assetContents = $imagick->getImageBlob();
-            }
+                $assetContents = $asset->getContents();
 
-            $sourceImage = imagecreatefromstring($assetContents);
-            
-            imagecopyresampled($thumbnailImage, $sourceImage, 0, 0, 0, 0, $sampleImageWidth, $sampleImageHeight, $asset->width, $asset->height);
-            
-            // Clean up source image immediately to free memory
-            imagedestroy($sourceImage);
-
-            $width = imagesx($thumbnailImage);
-            $height = imagesy($thumbnailImage);
-            
-            // Get colors for image
-            $pixels = [];
-            for ($y = 0; $y < $height; ++$y) {
-                $row = [];
-                for ($x = 0; $x < $width; ++$x) {
-                    $rgb = imagecolorat($thumbnailImage, $x, $y);
-                    $row[] = [
-                        ($rgb >> 16) & 0xFF,
-                        ($rgb >> 8) & 0xFF,
-                        $rgb & 0xFF
-                    ];
+                if (in_array($asset->mimeType, $typesToTransform)) {
+                    if (!class_exists('Imagick')) {
+                        Craft::error('Imagick is required to generate a BlurHash for ' . $asset->mimeType . ' images: ' . $asset->filename, __METHOD__);
+                        return false;
+                    }
+                    $imagick = new \Imagick();
+                    $imagick->readImageBlob($assetContents);
+                    $imagick->setImageFormat('png');
+                    $assetContents = $imagick->getImageBlob();
                 }
-                $pixels[] = $row;
-            }
-            
-            imagedestroy($thumbnailImage);
 
-            // Generate a blurhash from the image data.
-            $components_x = (int)($asset->width > $asset->height ? 6 : ceil(6 * ($asset->width / $asset->height)));
-            $components_y = (int)($asset->width < $asset->height ? 6 : ceil(6 * ($asset->height / $asset->width)));
-            
-            $blurhash = KornRunnerBlurhash::encode($pixels, $components_x, $components_y);
-            \Craft::$app->cache->set($cacheKey, $blurhash, 60 * 60 * 24 * 7 * 4); // Cache for approx 1 month
-            
-            return $blurhash;
+                $sourceImage = @imagecreatefromstring($assetContents);
+                if (!$sourceImage) {
+                    Craft::error('An error occurred trying to read the image ' . $asset->filename . ' to generate a BlurHash.', __METHOD__);
+                    return false;
+                }
+
+                imagecopyresampled($thumbnailImage, $sourceImage, 0, 0, 0, 0, $sampleImageWidth, $sampleImageHeight, $asset->width, $asset->height);
+
+                // Clean up source image immediately to free memory
+                $this->destroyImage($sourceImage);
+
+                $width = imagesx($thumbnailImage);
+                $height = imagesy($thumbnailImage);
+
+                // Get colors for image
+                $pixels = [];
+                for ($y = 0; $y < $height; ++$y) {
+                    $row = [];
+                    for ($x = 0; $x < $width; ++$x) {
+                        $rgb = imagecolorat($thumbnailImage, $x, $y);
+                        $row[] = [
+                            ($rgb >> 16) & 0xFF,
+                            ($rgb >> 8) & 0xFF,
+                            $rgb & 0xFF
+                        ];
+                    }
+                    $pixels[] = $row;
+                }
+
+                $this->destroyImage($thumbnailImage);
+
+                // Generate a blurhash from the image data.
+                $components_x = (int)($asset->width > $asset->height ? 6 : ceil(6 * ($asset->width / $asset->height)));
+                $components_y = (int)($asset->width < $asset->height ? 6 : ceil(6 * ($asset->height / $asset->width)));
+
+                $blurhash = KornRunnerBlurhash::encode($pixels, $components_x, $components_y);
+                \Craft::$app->cache->set($cacheKey, $blurhash, 60 * 60 * 24 * 7 * 4); // Cache for approx 1 month
+
+                return $blurhash;
+            } catch (\Throwable $e) {
+                Craft::error('An error occurred trying to generate a BlurHash for ' . $asset->filename . ': ' . $e->getMessage(), __METHOD__);
+                return false;
+            } finally {
+                $this->destroyImage($sourceImage);
+                $this->destroyImage($thumbnailImage);
+            }
         }
 
     }
@@ -267,9 +285,25 @@ class BlurHashService extends Component
         
         \Craft::$app->cache->set($cacheKey, $decodedImageData, 60 * 60 * 24 * 7 * 4);
         
-        imagedestroy($decodedImage); // Clean up memory immediately
+        $this->destroyImage($decodedImage); // Clean up memory immediately
         return $decodedImageData;
 
+    }
+
+
+    /**
+     * destroyImage: Free a GD image's memory straight away. Only needed on PHP < 8.
+     *
+     * @param image GD image
+     *
+     * @return void
+     */
+    private function destroyImage(&$image)
+    {
+        if (PHP_VERSION_ID < 80000 && is_resource($image)) {
+            imagedestroy($image);
+        }
+        $image = null;
     }
 
 
