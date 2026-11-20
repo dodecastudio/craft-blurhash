@@ -8,6 +8,7 @@
 - Fixed: Images that can't be read (corrupt files, unsupported formats or a failed download) no longer cause an error. The error is logged and `false` or `defaultAverageColor` is returned instead.
 - Fixed: TIFF images are now converted with Imagick before encoding, as GD can't read them. If Imagick isn't installed, TIFF and HEIC images are skipped and an error is logged.
 - Fixed: Issue with the cache key when `dateModified` is not set for an asset, which had returned in 3.0.4. It now falls back to `dateUpdated` while still supporting older versions of PHP.
+- Fixed: A bug whereby the `memoryInfo()` Twig function would produce an error, as it was registered as a filter. The `memoryInfo` filter was unaffected.
 
 ## 3.0.6 - 2026-04-23
 

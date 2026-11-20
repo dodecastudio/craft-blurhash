@@ -57,7 +57,7 @@ class BlurHashTwigExtension extends AbstractExtension
             new TwigFunction('blurhash', [$this, 'blurhash']),
             new TwigFunction('blurhashToUri', [$this, 'blurhashToUri']),
             new TwigFunction('averageColor', [$this, 'averageColor']),
-            new TwigFilter('memoryInfo', [$this, 'memoryInfo']),
+            new TwigFunction('memoryInfo', [$this, 'memoryInfo']),
         ];
     }
 
