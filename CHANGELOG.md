@@ -2,22 +2,23 @@
 
 ## 3.1.0 - 2026-11-20
 
-- Fixed: Cached blurhashes and average colors are now returned _without_ first checking the asset's file exists. On remote volumes (S3, Servd etc) that check was a network request per asset on every page load, and `averageColor` made it twice, so pages showing many images could take longer to render.
-- Fixed: `averageColor` could try to read an average color from an invalid blurhash when the asset's file was missing. It now returns `defaultAverageColor`.
-- Fixed: Ensure `imagedestroy()` is only used for PHP 7.X, as it's deprecated in PHP 8.
-- Fixed: Images that can't be read (corrupt files, unsupported formats or a failed download) no longer cause an error. The error is logged and `false` or `defaultAverageColor` is returned instead.
-- Fixed: TIFF images are now converted with Imagick before encoding, as GD can't read them. If Imagick isn't installed, TIFF and HEIC images are skipped and an error is logged.
-- Fixed: Issue with the cache key when `dateModified` is not set for an asset, which had returned in 3.0.4. It now falls back to `dateUpdated` while still supporting older versions of PHP.
-- Fixed: A bug whereby a blurhash for an asset with a transform set was generated from only the top-left corner of the image. It's now generated from the whole image. Related to [#17](https://github.com/dodecastudio/craft-blurhash/issues/17).
-- Fixed: A bug whereby the `memoryInfo()` Twig function would produce an error, as it was registered as a filter. The `memoryInfo` filter was unaffected.
-- Fixed: A bug whereby the `@averageColor` GraphQL directive would produce an error when applied to an empty value. It now returns `null`.
-- Fixed: The `@assetToBlurHash` GraphQL directive now returns `null` rather than an empty string when a blurhash can't be generated, and correctly logs any errors.
-- Updated: When a blurhash can't be generated for an asset, this is now cached for 1 day, so the file isn't downloaded and checked again on every page load. Replacing the file will retry straight away.
-- Updated: Blurhashes and blurhash images are now cached until the asset changes, rather than for 1 month, so they're no longer regenerated from the original image every month.
-- Updated: Average colors are no longer cached, as reading them from a blurhash is quicker than a cache lookup.
-- Fixed: `memoryInfo` no longer downloads a copy of the original image, which was left behind as a temp file on every call. It now estimates from the asset's dimensions, giving the same results, and now also supports HEIC images.
-- Updated: Blurhashes and average colors for images with transparency are now generated against the image's own average color, rather than black, so they're no longer too dark.
-- Updated: Blurhashes for image formats that support transparency (PNG, WebP, GIF, AVIF, TIFF and HEIC) will be regenerated once after updating. JPEG and BMP images are unaffected. Caution: pages showing many of these images may be slower the first time they're viewed.
+_One thing led to another..._
+
+- Updated: Cached blurhashes are now returned _without_ first checking the asset's file exists, which was slow on remote volumes (S3, Servd etc).
+- Updated: Blurhashes are now cached until the asset changes, rather than for 1 month.
+- Updated: Assets that fail to generate a blurhash are now cached for 1 day, rather than retried on every page load.
+- Updated: Average colors are no longer cached, as reading them from a blurhash is quicker.
+- Updated: Images with transparency now use their own average color as a background, rather than black. Note: Blurhashes for PNG, WebP, GIF, AVIF, TIFF and HEIC images will be regenerated once after updating.
+- Updated: Added support for TIFF images, which are converted with Imagick. TIFF and HEIC images are skipped if Imagick isn't installed.
+- Fixed: Images that can't be read no longer produce an error. The error is logged and `defaultAverageColor` is returned.
+- Fixed: `averageColor` now returns `defaultAverageColor` when an asset's file is missing.
+- Fixed: Ensure `imagedestroy()` is only used for PHP 7.X, as it's deprecated in PHP 8.5.
+- Fixed: Issue with the cache key when `dateModified` is not set for an asset, which had returned in 3.0.4.
+- Fixed: Blurhashes for assets with a transform set were generated from the top-left corner of the image, they now use the whole image. Related to [#17](https://github.com/dodecastudio/craft-blurhash/issues/17).
+- Fixed: `memoryInfo` no longer leaves a temp file behind on every call, and now supports HEIC images.
+- Fixed: A bug whereby the `memoryInfo()` Twig function would produce an error.
+- Fixed: A bug whereby the `@averageColor` GraphQL directive would produce an error when applied to an empty value (it now returns null).
+- Fixed: The `@assetToBlurHash` GraphQL directive now returns `null` when a blurhash can't be generated.
 
 ## 3.0.6 - 2026-04-23
 
