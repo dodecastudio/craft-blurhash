@@ -216,7 +216,7 @@ class BlurHashService extends Component
                 $components_y = (int)($asset->width < $asset->height ? 6 : ceil(6 * ($asset->height / $asset->width)));
 
                 $blurhash = KornRunnerBlurhash::encode($pixels, $components_x, $components_y);
-                \Craft::$app->cache->set($cacheKey, $blurhash, 60 * 60 * 24 * 7 * 4); // Cache for approx 1 month
+                \Craft::$app->cache->set($cacheKey, $blurhash, 0); // Cache until the asset changes
 
                 return $blurhash;
             } catch (\Throwable $e) {
@@ -287,7 +287,7 @@ class BlurHashService extends Component
         imagepng($decodedImage);
         $decodedImageData = ob_get_clean();
         
-        \Craft::$app->cache->set($cacheKey, $decodedImageData, 60 * 60 * 24 * 7 * 4);
+        \Craft::$app->cache->set($cacheKey, $decodedImageData, 0);
         
         $this->destroyImage($decodedImage); // Clean up memory immediately
         return $decodedImageData;
@@ -357,29 +357,17 @@ class BlurHashService extends Component
             $blurhash = $source;
         }
         
-        // Set unique cacheKey
-        $cacheKey = 'blurhashavereagecolor-' . $blurhash;
-        $cachedValue = \Craft::$app->cache->get($cacheKey);
+        try {
+            // The average color is encoded in the first few characters of the string
+            $averageColor = substr($blurhash, 2, 4);
+            $srgb = Base83::decode($averageColor);
 
-        // Check for cached value
-        if ($cachedValue) {
-            return new ColorData($cachedValue);
-        } else {
-            try {
-                // The average color is encoded in the first few characters of the string
-                $averageColor = substr($blurhash, 2, 4);
-                $srgb = Base83::decode($averageColor);
-                
-                $hex = "#" . str_pad(dechex($srgb), 6, "0", STR_PAD_LEFT);
+            $hex = "#" . str_pad(dechex($srgb), 6, "0", STR_PAD_LEFT);
 
-                $value = ColorValidator::normalizeColor($hex);
-                \Craft::$app->cache->set($cacheKey, $value, 60 * 60 * 24 * 7 * 4); // Cache for approx 1 month
-                
-                return new ColorData($value);
-            } catch (\Exception $e) {
-                Craft::error('An error occurred trying to parse the BlurHash string: ' . $e->getMessage(), __METHOD__);
-                return null;
-            }
+            return new ColorData(ColorValidator::normalizeColor($hex));
+        } catch (\Exception $e) {
+            Craft::error('An error occurred trying to parse the BlurHash string: ' . $e->getMessage(), __METHOD__);
+            return null;
         }
     }
 

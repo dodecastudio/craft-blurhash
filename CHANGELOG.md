@@ -12,6 +12,8 @@
 - Fixed: A bug whereby the `@averageColor` GraphQL directive would produce an error when applied to an empty value. It now returns `null`.
 - Fixed: The `@assetToBlurHash` GraphQL directive now returns `null` rather than an empty string when a blurhash can't be generated, and correctly logs any errors.
 - Updated: When a blurhash can't be generated for an asset, this is now cached for 1 day, so the file isn't downloaded and checked again on every page load. Replacing the file will retry straight away.
+- Updated: Blurhashes and blurhash images are now cached until the asset changes, rather than for 1 month, so they're no longer regenerated from the original image every month.
+- Updated: Average colors are no longer cached, as reading them from a blurhash is quicker than a cache lookup.
 
 ## 3.0.6 - 2026-04-23
 
