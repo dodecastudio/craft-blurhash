@@ -2,8 +2,6 @@
 
 ## 3.1.0 - 2026-11-20
 
-_One thing led to another..._
-
 - Updated: Cached blurhashes are now returned _without_ first checking the asset's file exists, which was slow on remote volumes (S3, Servd etc).
 - Updated: Blurhashes are now cached until the asset changes, rather than for 1 month.
 - Updated: Assets that fail to generate a blurhash are now cached for 1 day, rather than retried on every page load.
