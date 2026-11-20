@@ -8,6 +8,7 @@
 - Fixed: Images that can't be read (corrupt files, unsupported formats or a failed download) no longer cause an error. The error is logged and `false` or `defaultAverageColor` is returned instead.
 - Fixed: TIFF images are now converted with Imagick before encoding, as GD can't read them. If Imagick isn't installed, TIFF and HEIC images are skipped and an error is logged.
 - Fixed: Issue with the cache key when `dateModified` is not set for an asset, which had returned in 3.0.4. It now falls back to `dateUpdated` while still supporting older versions of PHP.
+- Fixed: A bug whereby a blurhash for an asset with a transform set was generated from only the top-left corner of the image. It's now generated from the whole image. Related to [#17](https://github.com/dodecastudio/craft-blurhash/issues/17).
 - Fixed: A bug whereby the `memoryInfo()` Twig function would produce an error, as it was registered as a filter. The `memoryInfo` filter was unaffected.
 - Fixed: A bug whereby the `@averageColor` GraphQL directive would produce an error when applied to an empty value. It now returns `null`.
 - Fixed: The `@assetToBlurHash` GraphQL directive now returns `null` rather than an empty string when a blurhash can't be generated, and correctly logs any errors.
