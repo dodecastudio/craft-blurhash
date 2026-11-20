@@ -14,6 +14,7 @@
 - Updated: When a blurhash can't be generated for an asset, this is now cached for 1 day, so the file isn't downloaded and checked again on every page load. Replacing the file will retry straight away.
 - Updated: Blurhashes and blurhash images are now cached until the asset changes, rather than for 1 month, so they're no longer regenerated from the original image every month.
 - Updated: Average colors are no longer cached, as reading them from a blurhash is quicker than a cache lookup.
+- Fixed: `memoryInfo` no longer downloads a copy of the original image, which was left behind as a temp file on every call. It now estimates from the asset's dimensions, giving the same results, and now also supports HEIC images.
 
 ## 3.0.6 - 2026-04-23
 

@@ -406,9 +406,9 @@ class BlurHashService extends Component
             $infoType = $this->DEFAULT_INFO_TYPE;
         }
         
-        $assetSize = @getimagesize($asset->getCopyOfFile()); 
-        if (isset($assetSize['bits'])) {
-            $estMemoryRequired = round(($assetSize[0] * $assetSize[1] * $assetSize['bits'] * (isset($assetSize['channels']) ? $assetSize['channels'] : 3) / 8 + Pow(2, 16)) * 1.65);
+        // Estimate from the stored dimensions, as an 8 bit, 3 channel image
+        if ($asset->width && $asset->height) {
+            $estMemoryRequired = round(($asset->width * $asset->height * 8 * 3 / 8 + Pow(2, 16)) * 1.65);
             switch ($infoType) {
                 case "required":
                     return strval($estMemoryRequired);
