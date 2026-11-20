@@ -144,7 +144,9 @@ class BlurHashService extends Component
         // Set unique cacheKey
         $date = $asset->dateModified ?? $asset->dateUpdated;
         $dateModified = $date ? $date->format('YmdHis') : '';
-        $cacheKey = 'blurhashstring-' . $asset->id . $dateModified . $sampleSize;
+        // Formats that can have transparency are keyed separately, as they're generated differently
+        $canHaveAlpha = in_array($asset->mimeType, ['image/png', 'image/webp', 'image/gif', 'image/avif', 'image/tiff', 'image/heic']);
+        $cacheKey = 'blurhashstring-' . ($canHaveAlpha ? 'alpha-' : '') . $asset->id . $dateModified . $sampleSize;
         $cachedValue = \Craft::$app->cache->get($cacheKey);
 
         // Check for cached value
@@ -162,11 +164,6 @@ class BlurHashService extends Component
             $thumbnailImage = null;
 
             try {
-                $sampleImageWidth = (int)round($sampleSize * ($asset->width > $asset->height ? 1 : $asset->width / $asset->height));
-                $sampleImageHeight = (int)round($sampleSize * ($asset->height > $asset->width ? 1 : $asset->height / $asset->width));
-
-                $thumbnailImage = imagecreatetruecolor($sampleImageWidth, $sampleImageHeight);
-
                 $assetContents = $asset->getContents();
 
                 if (in_array($asset->mimeType, $typesToTransform)) {
@@ -186,7 +183,17 @@ class BlurHashService extends Component
                     return $this->cacheFailure($cacheKey);
                 }
 
-                imagecopyresampled($thumbnailImage, $sourceImage, 0, 0, 0, 0, $sampleImageWidth, $sampleImageHeight, $asset->width, $asset->height);
+                // Use the image's own dimensions, as the asset's reflect any transform set on it
+                $sourceWidth = imagesx($sourceImage);
+                $sourceHeight = imagesy($sourceImage);
+
+                $sampleImageWidth = (int)round($sampleSize * ($sourceWidth > $sourceHeight ? 1 : $sourceWidth / $sourceHeight));
+                $sampleImageHeight = (int)round($sampleSize * ($sourceHeight > $sourceWidth ? 1 : $sourceHeight / $sourceWidth));
+
+                $thumbnailImage = imagecreatetruecolor($sampleImageWidth, $sampleImageHeight);
+                imagealphablending($thumbnailImage, false);
+
+                imagecopyresampled($thumbnailImage, $sourceImage, 0, 0, 0, 0, $sampleImageWidth, $sampleImageHeight, $sourceWidth, $sourceHeight);
 
                 // Clean up source image immediately to free memory
                 $this->destroyImage($sourceImage);
@@ -196,24 +203,45 @@ class BlurHashService extends Component
 
                 // Get colors for image
                 $pixels = [];
+                $opacities = [];
+                $total = [0, 0, 0, 0];
                 for ($y = 0; $y < $height; ++$y) {
                     $row = [];
                     for ($x = 0; $x < $width; ++$x) {
                         $rgb = imagecolorat($thumbnailImage, $x, $y);
-                        $row[] = [
+                        $color = [
                             ($rgb >> 16) & 0xFF,
                             ($rgb >> 8) & 0xFF,
                             $rgb & 0xFF
                         ];
+                        $opacity = 1 - (($rgb >> 24) & 0x7F) / 127;
+                        $total = [$total[0] + $color[0] * $opacity, $total[1] + $color[1] * $opacity, $total[2] + $color[2] * $opacity, $total[3] + $opacity];
+                        $opacities[$y][$x] = $opacity;
+                        $row[] = $color;
                     }
                     $pixels[] = $row;
                 }
 
                 $this->destroyImage($thumbnailImage);
 
+                // Place any transparent pixels on the average color of the visible ones
+                if ($total[3] < $width * $height) {
+                    $background = $total[3] > 0
+                        ? [$total[0] / $total[3], $total[1] / $total[3], $total[2] / $total[3]]
+                        : sscanf(ColorValidator::normalizeColor(BlurHash::getInstance()->getSettings()->defaultAverageColor), '#%02x%02x%02x');
+                    foreach ($pixels as $y => $row) {
+                        foreach ($row as $x => $color) {
+                            $opacity = $opacities[$y][$x];
+                            for ($i = 0; $i < 3; ++$i) {
+                                $pixels[$y][$x][$i] = (int)round($color[$i] * $opacity + $background[$i] * (1 - $opacity));
+                            }
+                        }
+                    }
+                }
+
                 // Generate a blurhash from the image data.
-                $components_x = (int)($asset->width > $asset->height ? 6 : ceil(6 * ($asset->width / $asset->height)));
-                $components_y = (int)($asset->width < $asset->height ? 6 : ceil(6 * ($asset->height / $asset->width)));
+                $components_x = (int)($sourceWidth > $sourceHeight ? 6 : ceil(6 * ($sourceWidth / $sourceHeight)));
+                $components_y = (int)($sourceWidth < $sourceHeight ? 6 : ceil(6 * ($sourceHeight / $sourceWidth)));
 
                 $blurhash = KornRunnerBlurhash::encode($pixels, $components_x, $components_y);
                 \Craft::$app->cache->set($cacheKey, $blurhash, 0); // Cache until the asset changes

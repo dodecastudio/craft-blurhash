@@ -15,6 +15,8 @@
 - Updated: Blurhashes and blurhash images are now cached until the asset changes, rather than for 1 month, so they're no longer regenerated from the original image every month.
 - Updated: Average colors are no longer cached, as reading them from a blurhash is quicker than a cache lookup.
 - Fixed: `memoryInfo` no longer downloads a copy of the original image, which was left behind as a temp file on every call. It now estimates from the asset's dimensions, giving the same results, and now also supports HEIC images.
+- Updated: Blurhashes and average colors for images with transparency are now generated against the image's own average color, rather than black, so they're no longer too dark.
+- Updated: Blurhashes for image formats that support transparency (PNG, WebP, GIF, AVIF, TIFF and HEIC) will be regenerated once after updating. JPEG and BMP images are unaffected. Caution: pages showing many of these images may be slower the first time they're viewed.
 
 ## 3.0.6 - 2026-04-23
 
