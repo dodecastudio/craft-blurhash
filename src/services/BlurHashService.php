@@ -26,6 +26,7 @@ class BlurHashService extends Component
 
     private $allowedInfoTypes = ['required', 'usage'];
     private $DEFAULT_INFO_TYPE = 'required';
+    private $fileExistsResults = [];
 
     /**
      * blurhash: Take a Craft CMS asset and return a data URI string.
@@ -68,10 +69,11 @@ class BlurHashService extends Component
      * validAsset: Check an asset is valid
      *
      * @param asset Asset
+     * @param checkFileExists Bool 
      *
-     * @return string
+     * @return bool
      */
-    private function validAsset($asset) {
+    private function validAsset($asset, $checkFileExists = true) {
 
         // Make sure it is an asset object
         if (!$asset instanceof Asset) {
@@ -84,21 +86,36 @@ class BlurHashService extends Component
         }
 
         // Should we check that the file exists?
-        if (BlurHash::getInstance()->getSettings()->checkFileExists) {
-
-            // Check file exists
-            if (method_exists($asset, 'getVolume')) {
-                if (method_exists($asset->getVolume(), 'fileExists')) {
-                    if ( !$asset->getVolume()->fileExists($asset->path) ) {
-                        return false;
-                    }
-                }
-            }
-
+        if ($checkFileExists && BlurHash::getInstance()->getSettings()->checkFileExists) {
+            return $this->fileExists($asset);
         }
 
         return true;
-    
+
+    }
+
+
+    /**
+     * fileExists: Check an asset's file exists, remembering the result for the rest of the request
+     *
+     * @param asset Asset
+     *
+     * @return bool
+     */
+    private function fileExists($asset) {
+
+        $key = $asset->id . '-' . $asset->path;
+        if (!isset($this->fileExistsResults[$key])) {
+            $this->fileExistsResults[$key] = true;
+            if (method_exists($asset, 'getVolume')) {
+                if (method_exists($asset->getVolume(), 'fileExists')) {
+                    $this->fileExistsResults[$key] = $asset->getVolume()->fileExists($asset->path);
+                }
+            }
+        }
+
+        return $this->fileExistsResults[$key];
+
     }
 
 
@@ -112,8 +129,9 @@ class BlurHashService extends Component
     public function blurhashEncode($asset)
     {
 
-        // Check it's a valid asset resource
-        if (!$this->validAsset($asset)) {
+        // Check it's a valid asset resource. 
+        // Only check on a cache miss (on remote volumes that is a network request for every asset)
+        if (!$this->validAsset($asset, false)) {
             return false;
         }
 
@@ -128,8 +146,13 @@ class BlurHashService extends Component
         // Check for cached value
         if ($cachedValue) {
             return $cachedValue;
-            
+
         } else {
+            // About to read the file, so make sure it's there
+            if (!$this->validAsset($asset)) {
+                return false;
+            }
+
             $typesToTransform = ["image/heic"];
 
             $sampleImageWidth = (int)round($sampleSize * ($asset->width > $asset->height ? 1 : $asset->width / $asset->height));
@@ -270,12 +293,11 @@ class BlurHashService extends Component
 
         // If it's an asset
         if ($isAsset) {
-            // Check it's valid
-            if (!$this->validAsset($source)) {
-                return new ColorData(BlurHash::getInstance()->getSettings()->defaultAverageColor);
-            }
             // Encode only if necessary
             $blurhash = $this->blurhashEncode($source);
+            if (!$blurhash) {
+                return new ColorData(BlurHash::getInstance()->getSettings()->defaultAverageColor);
+            }
         }
         
         // If we've just got a string then continue with that
