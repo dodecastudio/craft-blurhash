@@ -47,7 +47,7 @@ class AssetToBlurHash extends Directive
         return 'assetToBlurHash';
     }
 
-    public static function apply($source, $value, array $arguments, ResolveInfo $resolveInfo): string
+    public static function apply($source, $value, array $arguments, ResolveInfo $resolveInfo): ?string
     {
         $asUri = $arguments['asUri'] ?? self::DEFAULT_AS_URI;
 
@@ -61,12 +61,12 @@ class AssetToBlurHash extends Directive
 
         try {
             $result = $asUri ? BlurHash::getInstance()->blurHashServices->blurhash($source) : BlurHash::getInstance()->blurHashServices->blurhashEncode($source);
-        } catch (BlurHash $e) {
+        } catch (\Throwable $e) {
             Craft::error('An error occured trying to generate the BlurHash image in the @assetToBlurHash GraphQL directive: ' . $e->getMessage(), __METHOD__);
             return null;
         }
         
-        return $result;
+        return $result ?: null;
 
     }
 }

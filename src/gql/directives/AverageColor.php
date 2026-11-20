@@ -6,6 +6,7 @@ use dodecastudio\blurhash\BlurHash;
 
 use Craft;
 use craft\elements\Asset;
+use craft\fields\data\ColorData;
 use craft\gql\base\Directive;
 use craft\gql\GqlEntityRegistry;
 use GraphQL\Language\DirectiveLocation;
@@ -38,13 +39,10 @@ class AverageColor extends Directive
         return 'averageColor';
     }
 
-    public static function apply($source, $value, array $arguments, ResolveInfo $resolveInfo): string
+    public static function apply($source, $value, array $arguments, ResolveInfo $resolveInfo): ?string
     {
-        if ($source instanceof Asset) {
-            return BlurHash::getInstance()->blurHashServices->averageColor($source);
-        }
+        $color = BlurHash::getInstance()->blurHashServices->averageColor($source instanceof Asset ? $source : $value);
 
-        return BlurHash::getInstance()->blurHashServices->averageColor($value);
-        
+        return $color instanceof ColorData || is_string($color) ? (string)$color : null;
     }
 }
