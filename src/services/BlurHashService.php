@@ -28,6 +28,9 @@ class BlurHashService extends Component
     private $DEFAULT_INFO_TYPE = 'required';
     private $fileExistsResults = [];
 
+    // Cached in place of a blurhash when one can't be generated (contains a space, so can't be a valid blurhash)
+    private const FAILED = 'no blurhash';
+
     /**
      * blurhash: Take a Craft CMS asset and return a data URI string.
      *
@@ -146,12 +149,12 @@ class BlurHashService extends Component
 
         // Check for cached value
         if ($cachedValue) {
-            return $cachedValue;
+            return $cachedValue === self::FAILED ? false : $cachedValue;
 
         } else {
             // About to read the file, so make sure it's there
             if (!$this->validAsset($asset)) {
-                return false;
+                return $this->cacheFailure($cacheKey);
             }
 
             $typesToTransform = ["image/heic", "image/tiff"];
@@ -169,7 +172,7 @@ class BlurHashService extends Component
                 if (in_array($asset->mimeType, $typesToTransform)) {
                     if (!class_exists('Imagick')) {
                         Craft::error('Imagick is required to generate a BlurHash for ' . $asset->mimeType . ' images: ' . $asset->filename, __METHOD__);
-                        return false;
+                        return $this->cacheFailure($cacheKey);
                     }
                     $imagick = new \Imagick();
                     $imagick->readImageBlob($assetContents);
@@ -180,7 +183,7 @@ class BlurHashService extends Component
                 $sourceImage = @imagecreatefromstring($assetContents);
                 if (!$sourceImage) {
                     Craft::error('An error occurred trying to read the image ' . $asset->filename . ' to generate a BlurHash.', __METHOD__);
-                    return false;
+                    return $this->cacheFailure($cacheKey);
                 }
 
                 imagecopyresampled($thumbnailImage, $sourceImage, 0, 0, 0, 0, $sampleImageWidth, $sampleImageHeight, $asset->width, $asset->height);
@@ -218,7 +221,7 @@ class BlurHashService extends Component
                 return $blurhash;
             } catch (\Throwable $e) {
                 Craft::error('An error occurred trying to generate a BlurHash for ' . $asset->filename . ': ' . $e->getMessage(), __METHOD__);
-                return false;
+                return $this->cacheFailure($cacheKey);
             } finally {
                 $this->destroyImage($sourceImage);
                 $this->destroyImage($thumbnailImage);
@@ -289,6 +292,20 @@ class BlurHashService extends Component
         $this->destroyImage($decodedImage); // Clean up memory immediately
         return $decodedImageData;
 
+    }
+
+
+    /**
+     * cacheFailure: Remember that a blurhash couldn't be generated, so it isn't retried on every request.
+     *
+     * @param cacheKey String
+     *
+     * @return bool
+     */
+    private function cacheFailure($cacheKey)
+    {
+        \Craft::$app->cache->set($cacheKey, self::FAILED, 60 * 60 * 24); // Cache for 1 day
+        return false;
     }
 
 
