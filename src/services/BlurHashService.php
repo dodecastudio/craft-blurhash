@@ -26,6 +26,10 @@ class BlurHashService extends Component
 
     private $allowedInfoTypes = ['required', 'usage'];
     private $DEFAULT_INFO_TYPE = 'required';
+    private $fileExistsResults = [];
+
+    // Cached in place of a blurhash when one can't be generated (contains a space, so can't be a valid blurhash)
+    private const FAILED = 'no blurhash';
 
     /**
      * blurhash: Take a Craft CMS asset and return a data URI string.
@@ -68,10 +72,11 @@ class BlurHashService extends Component
      * validAsset: Check an asset is valid
      *
      * @param asset Asset
+     * @param checkFileExists Bool 
      *
-     * @return string
+     * @return bool
      */
-    private function validAsset($asset) {
+    private function validAsset($asset, $checkFileExists = true) {
 
         // Make sure it is an asset object
         if (!$asset instanceof Asset) {
@@ -84,21 +89,36 @@ class BlurHashService extends Component
         }
 
         // Should we check that the file exists?
-        if (BlurHash::getInstance()->getSettings()->checkFileExists) {
-
-            // Check file exists
-            if (method_exists($asset, 'getVolume')) {
-                if (method_exists($asset->getVolume(), 'fileExists')) {
-                    if ( !$asset->getVolume()->fileExists($asset->path) ) {
-                        return false;
-                    }
-                }
-            }
-
+        if ($checkFileExists && BlurHash::getInstance()->getSettings()->checkFileExists) {
+            return $this->fileExists($asset);
         }
 
         return true;
-    
+
+    }
+
+
+    /**
+     * fileExists: Check an asset's file exists, remembering the result for the rest of the request
+     *
+     * @param asset Asset
+     *
+     * @return bool
+     */
+    private function fileExists($asset) {
+
+        $key = $asset->id . '-' . $asset->path;
+        if (!isset($this->fileExistsResults[$key])) {
+            $this->fileExistsResults[$key] = true;
+            if (method_exists($asset, 'getVolume')) {
+                if (method_exists($asset->getVolume(), 'fileExists')) {
+                    $this->fileExistsResults[$key] = $asset->getVolume()->fileExists($asset->path);
+                }
+            }
+        }
+
+        return $this->fileExistsResults[$key];
+
     }
 
 
@@ -112,8 +132,9 @@ class BlurHashService extends Component
     public function blurhashEncode($asset)
     {
 
-        // Check it's a valid asset resource
-        if (!$this->validAsset($asset)) {
+        // Check it's a valid asset resource. 
+        // Only check on a cache miss (on remote volumes that is a network request for every asset)
+        if (!$this->validAsset($asset, false)) {
             return false;
         }
 
@@ -121,66 +142,118 @@ class BlurHashService extends Component
         $sampleSize = BlurHash::getInstance()->getSettings()->sampleMaxImageSize;
 
         // Set unique cacheKey
-        $dateModified = $asset->dateModified->format('YmdHis') ?? $asset->dateUpdated->format('YmdHis') ?? '';
-        $cacheKey = 'blurhashstring-' . $asset->id . $dateModified . $sampleSize;
+        $date = $asset->dateModified ?? $asset->dateUpdated;
+        $dateModified = $date ? $date->format('YmdHis') : '';
+        // Formats that can have transparency are keyed separately, as they're generated differently
+        $canHaveAlpha = in_array($asset->mimeType, ['image/png', 'image/webp', 'image/gif', 'image/avif', 'image/tiff', 'image/heic']);
+        $cacheKey = 'blurhashstring-' . ($canHaveAlpha ? 'alpha-' : '') . $asset->id . $dateModified . $sampleSize;
         $cachedValue = \Craft::$app->cache->get($cacheKey);
 
         // Check for cached value
         if ($cachedValue) {
-            return $cachedValue;
-            
+            return $cachedValue === self::FAILED ? false : $cachedValue;
+
         } else {
-            $typesToTransform = ["image/heic"];
-
-            $sampleImageWidth = (int)round($sampleSize * ($asset->width > $asset->height ? 1 : $asset->width / $asset->height));
-            $sampleImageHeight = (int)round($sampleSize * ($asset->height > $asset->width ? 1 : $asset->height / $asset->width));
-
-            $thumbnailImage = imagecreatetruecolor($sampleImageWidth, $sampleImageHeight); 
-
-            $assetContents = $asset->getContents();
-            
-            if (in_array($asset->mimeType, $typesToTransform)) {
-                $imagick = new \Imagick();
-                $imagick->readImageBlob($assetContents);
-                $imagick->setImageFormat('png');
-                $assetContents = $imagick->getImageBlob();
+            // About to read the file, so make sure it's there
+            if (!$this->validAsset($asset)) {
+                return $this->cacheFailure($cacheKey);
             }
 
-            $sourceImage = imagecreatefromstring($assetContents);
-            
-            imagecopyresampled($thumbnailImage, $sourceImage, 0, 0, 0, 0, $sampleImageWidth, $sampleImageHeight, $asset->width, $asset->height);
-            
-            // Clean up source image immediately to free memory
-            imagedestroy($sourceImage);
+            $typesToTransform = ["image/heic", "image/tiff"];
+            $sourceImage = null;
+            $thumbnailImage = null;
 
-            $width = imagesx($thumbnailImage);
-            $height = imagesy($thumbnailImage);
-            
-            // Get colors for image
-            $pixels = [];
-            for ($y = 0; $y < $height; ++$y) {
-                $row = [];
-                for ($x = 0; $x < $width; ++$x) {
-                    $rgb = imagecolorat($thumbnailImage, $x, $y);
-                    $row[] = [
-                        ($rgb >> 16) & 0xFF,
-                        ($rgb >> 8) & 0xFF,
-                        $rgb & 0xFF
-                    ];
+            try {
+                $assetContents = $asset->getContents();
+
+                if (in_array($asset->mimeType, $typesToTransform)) {
+                    if (!class_exists('Imagick')) {
+                        Craft::error('Imagick is required to generate a BlurHash for ' . $asset->mimeType . ' images: ' . $asset->filename, __METHOD__);
+                        return $this->cacheFailure($cacheKey);
+                    }
+                    $imagick = new \Imagick();
+                    $imagick->readImageBlob($assetContents);
+                    $imagick->setImageFormat('png');
+                    $assetContents = $imagick->getImageBlob();
                 }
-                $pixels[] = $row;
-            }
-            
-            imagedestroy($thumbnailImage);
 
-            // Generate a blurhash from the image data.
-            $components_x = (int)($asset->width > $asset->height ? 6 : ceil(6 * ($asset->width / $asset->height)));
-            $components_y = (int)($asset->width < $asset->height ? 6 : ceil(6 * ($asset->height / $asset->width)));
-            
-            $blurhash = KornRunnerBlurhash::encode($pixels, $components_x, $components_y);
-            \Craft::$app->cache->set($cacheKey, $blurhash, 60 * 60 * 24 * 7 * 4); // Cache for approx 1 month
-            
-            return $blurhash;
+                $sourceImage = @imagecreatefromstring($assetContents);
+                if (!$sourceImage) {
+                    Craft::error('An error occurred trying to read the image ' . $asset->filename . ' to generate a BlurHash.', __METHOD__);
+                    return $this->cacheFailure($cacheKey);
+                }
+
+                // Use the image's own dimensions, as the asset's reflect any transform set on it
+                $sourceWidth = imagesx($sourceImage);
+                $sourceHeight = imagesy($sourceImage);
+
+                $sampleImageWidth = (int)round($sampleSize * ($sourceWidth > $sourceHeight ? 1 : $sourceWidth / $sourceHeight));
+                $sampleImageHeight = (int)round($sampleSize * ($sourceHeight > $sourceWidth ? 1 : $sourceHeight / $sourceWidth));
+
+                $thumbnailImage = imagecreatetruecolor($sampleImageWidth, $sampleImageHeight);
+                imagealphablending($thumbnailImage, false);
+
+                imagecopyresampled($thumbnailImage, $sourceImage, 0, 0, 0, 0, $sampleImageWidth, $sampleImageHeight, $sourceWidth, $sourceHeight);
+
+                // Clean up source image immediately to free memory
+                $this->destroyImage($sourceImage);
+
+                $width = imagesx($thumbnailImage);
+                $height = imagesy($thumbnailImage);
+
+                // Get colors for image
+                $pixels = [];
+                $opacities = [];
+                $total = [0, 0, 0, 0];
+                for ($y = 0; $y < $height; ++$y) {
+                    $row = [];
+                    for ($x = 0; $x < $width; ++$x) {
+                        $rgb = imagecolorat($thumbnailImage, $x, $y);
+                        $color = [
+                            ($rgb >> 16) & 0xFF,
+                            ($rgb >> 8) & 0xFF,
+                            $rgb & 0xFF
+                        ];
+                        $opacity = 1 - (($rgb >> 24) & 0x7F) / 127;
+                        $total = [$total[0] + $color[0] * $opacity, $total[1] + $color[1] * $opacity, $total[2] + $color[2] * $opacity, $total[3] + $opacity];
+                        $opacities[$y][$x] = $opacity;
+                        $row[] = $color;
+                    }
+                    $pixels[] = $row;
+                }
+
+                $this->destroyImage($thumbnailImage);
+
+                // Place any transparent pixels on the average color of the visible ones
+                if ($total[3] < $width * $height) {
+                    $background = $total[3] > 0
+                        ? [$total[0] / $total[3], $total[1] / $total[3], $total[2] / $total[3]]
+                        : sscanf(ColorValidator::normalizeColor(BlurHash::getInstance()->getSettings()->defaultAverageColor), '#%02x%02x%02x');
+                    foreach ($pixels as $y => $row) {
+                        foreach ($row as $x => $color) {
+                            $opacity = $opacities[$y][$x];
+                            for ($i = 0; $i < 3; ++$i) {
+                                $pixels[$y][$x][$i] = (int)round($color[$i] * $opacity + $background[$i] * (1 - $opacity));
+                            }
+                        }
+                    }
+                }
+
+                // Generate a blurhash from the image data.
+                $components_x = (int)($sourceWidth > $sourceHeight ? 6 : ceil(6 * ($sourceWidth / $sourceHeight)));
+                $components_y = (int)($sourceWidth < $sourceHeight ? 6 : ceil(6 * ($sourceHeight / $sourceWidth)));
+
+                $blurhash = KornRunnerBlurhash::encode($pixels, $components_x, $components_y);
+                \Craft::$app->cache->set($cacheKey, $blurhash, 0); // Cache until the asset changes
+
+                return $blurhash;
+            } catch (\Throwable $e) {
+                Craft::error('An error occurred trying to generate a BlurHash for ' . $asset->filename . ': ' . $e->getMessage(), __METHOD__);
+                return $this->cacheFailure($cacheKey);
+            } finally {
+                $this->destroyImage($sourceImage);
+                $this->destroyImage($thumbnailImage);
+            }
         }
 
     }
@@ -242,11 +315,41 @@ class BlurHashService extends Component
         imagepng($decodedImage);
         $decodedImageData = ob_get_clean();
         
-        \Craft::$app->cache->set($cacheKey, $decodedImageData, 60 * 60 * 24 * 7 * 4);
+        \Craft::$app->cache->set($cacheKey, $decodedImageData, 0);
         
-        imagedestroy($decodedImage); // Clean up memory immediately
+        $this->destroyImage($decodedImage); // Clean up memory immediately
         return $decodedImageData;
 
+    }
+
+
+    /**
+     * cacheFailure: Remember that a blurhash couldn't be generated, so it isn't retried on every request.
+     *
+     * @param cacheKey String
+     *
+     * @return bool
+     */
+    private function cacheFailure($cacheKey)
+    {
+        \Craft::$app->cache->set($cacheKey, self::FAILED, 60 * 60 * 24); // Cache for 1 day
+        return false;
+    }
+
+
+    /**
+     * destroyImage: Free a GD image's memory straight away. Only needed on PHP < 8.
+     *
+     * @param image GD image
+     *
+     * @return void
+     */
+    private function destroyImage(&$image)
+    {
+        if (PHP_VERSION_ID < 80000 && is_resource($image)) {
+            imagedestroy($image);
+        }
+        $image = null;
     }
 
 
@@ -270,12 +373,11 @@ class BlurHashService extends Component
 
         // If it's an asset
         if ($isAsset) {
-            // Check it's valid
-            if (!$this->validAsset($source)) {
-                return new ColorData(BlurHash::getInstance()->getSettings()->defaultAverageColor);
-            }
             // Encode only if necessary
             $blurhash = $this->blurhashEncode($source);
+            if (!$blurhash) {
+                return new ColorData(BlurHash::getInstance()->getSettings()->defaultAverageColor);
+            }
         }
         
         // If we've just got a string then continue with that
@@ -283,29 +385,17 @@ class BlurHashService extends Component
             $blurhash = $source;
         }
         
-        // Set unique cacheKey
-        $cacheKey = 'blurhashavereagecolor-' . $blurhash;
-        $cachedValue = \Craft::$app->cache->get($cacheKey);
+        try {
+            // The average color is encoded in the first few characters of the string
+            $averageColor = substr($blurhash, 2, 4);
+            $srgb = Base83::decode($averageColor);
 
-        // Check for cached value
-        if ($cachedValue) {
-            return new ColorData($cachedValue);
-        } else {
-            try {
-                // The average color is encoded in the first few characters of the string
-                $averageColor = substr($blurhash, 2, 4);
-                $srgb = Base83::decode($averageColor);
-                
-                $hex = "#" . str_pad(dechex($srgb), 6, "0", STR_PAD_LEFT);
+            $hex = "#" . str_pad(dechex($srgb), 6, "0", STR_PAD_LEFT);
 
-                $value = ColorValidator::normalizeColor($hex);
-                \Craft::$app->cache->set($cacheKey, $value, 60 * 60 * 24 * 7 * 4); // Cache for approx 1 month
-                
-                return new ColorData($value);
-            } catch (\Exception $e) {
-                Craft::error('An error occurred trying to parse the BlurHash string: ' . $e->getMessage(), __METHOD__);
-                return null;
-            }
+            return new ColorData(ColorValidator::normalizeColor($hex));
+        } catch (\Exception $e) {
+            Craft::error('An error occurred trying to parse the BlurHash string: ' . $e->getMessage(), __METHOD__);
+            return null;
         }
     }
 
@@ -344,9 +434,9 @@ class BlurHashService extends Component
             $infoType = $this->DEFAULT_INFO_TYPE;
         }
         
-        $assetSize = @getimagesize($asset->getCopyOfFile()); 
-        if (isset($assetSize['bits'])) {
-            $estMemoryRequired = round(($assetSize[0] * $assetSize[1] * $assetSize['bits'] * (isset($assetSize['channels']) ? $assetSize['channels'] : 3) / 8 + Pow(2, 16)) * 1.65);
+        // Estimate from the stored dimensions, as an 8 bit, 3 channel image
+        if ($asset->width && $asset->height) {
+            $estMemoryRequired = round(($asset->width * $asset->height * 8 * 3 / 8 + Pow(2, 16)) * 1.65);
             switch ($infoType) {
                 case "required":
                     return strval($estMemoryRequired);
